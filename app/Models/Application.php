@@ -3,17 +3,33 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Job;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Enums\ApplicationStatus;
 
 class Application extends Model
 {
-    
+    protected $fillable = [
+        'job_id',
+        'user_id',
+        'resume',
+        'cover_letter',
+        'status',
+    ];
 
-    public function job() {
+    protected function casts(): array
+    {
+        return [
+            'status' => ApplicationStatus::class,
+        ];
+    }
+
+    public function job(): BelongsTo
+    {
         return $this->belongsTo(Job::class);
     }
-    public function user() {
+
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 }

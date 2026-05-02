@@ -1,0 +1,68 @@
+
+✅ Users
+id
+name
+email
+password
+role (candidate / employer / admin)
+phone
+linkedin_url (nullable)
+created_at
+✅ Companies (for employers)
+id
+user_id (FK → users)
+name
+description
+logo
+website
+created_at
+👉 One employer → one company (or you can allow multiple later)
+✅ Jobs
+id
+company_id (FK)
+title
+description
+requirements
+benefits
+salary_min
+salary_max
+location
+work_type (remote / onsite / hybrid)
+experience_level
+deadline
+status (pending / approved / rejected)
+created_at
+✅ Categories
+id
+name
+✅ Job_Category (Pivot)
+(many-to-many)
+job_id
+category_id
+✅ Skills (Tech Stack)
+id
+name
+✅ Job_Skill (Pivot)
+job_id
+skill_id
+✅ Applications
+id
+job_id
+user_id (candidate)
+resume (file path)
+cover_letter
+status (pending / accepted / rejected)
+created_at
+✅ Comments
+id
+job_id
+user_id
+content
+created_at
+✅ Notifications (for real-time alerts)
+id
+user_id
+type
+message
+is_read
+created_at

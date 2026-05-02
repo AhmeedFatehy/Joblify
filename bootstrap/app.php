@@ -1,11 +1,16 @@
 <?php
 
-use App\Http\Middleware\HandleAppearance;
-use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Exceptions\ApiException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -15,14 +20,96 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
-
-        $middleware->web(append: [
-            HandleAppearance::class,
-            HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
+        // Force JSON responses for API requests
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\AcceptJson::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Convert all exceptions to JSON for API-only app
+        $exceptions->shouldRenderJsonWhen(function (Request $request): bool {
+            return true;
+        });
+
+        // ValidationException -> 422
+        $exceptions->render(function (ValidationException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        });
+
+        // ModelNotFoundException -> 404
+        $exceptions->render(function (ModelNotFoundException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Resource not found',
+            ], 404);
+        });
+
+        // NotFoundHttpException -> 404
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Route not found',
+            ], 404);
+        });
+
+        // MethodNotAllowedHttpException -> 405
+        $exceptions->render(function (MethodNotAllowedHttpException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Method not allowed',
+            ], 405);
+        });
+
+        // AuthenticationException -> 401
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated',
+            ], 401);
+        });
+
+        // AuthorizationException -> 403
+        $exceptions->render(function (AuthorizationException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'This action is unauthorized',
+            ], 403);
+        });
+
+        // Custom ApiException
+        $exceptions->render(function (ApiException $e, Request $request) {
+            return $e->render();
+        });
+
+        // Fallback for all other exceptions
+        $exceptions->render(function (Throwable $e, Request $request) {
+            $isDebug = config('app.debug');
+
+            $response = [
+                'success' => false,
+                'message' => 'Server error',
+            ];
+
+            if ($isDebug) {
+                $response['debug'] = [
+                    'exception' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => collect($e->getTrace())->take(5)->map(function ($trace) {
+                        return [
+                            'file' => $trace['file'] ?? null,
+                            'line' => $trace['line'] ?? null,
+                            'function' => $trace['function'] ?? null,
+                        ];
+                    }),
+                ];
+            }
+
+            return response()->json($response, 500);
+        });
     })->create();

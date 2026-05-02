@@ -3,29 +3,66 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Company;
-use App\Models\Category;
-use App\Models\Skill;
-use App\Models\Application;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Enums\JobStatus;
+use App\Enums\WorkType;
+use App\Enums\ExperienceLevel;
 
 class Job extends Model
 {
     protected $table = 'job_listings';
 
+    protected $fillable = [
+        'company_id',
+        'title',
+        'description',
+        'requirements',
+        'benefits',
+        'salary_min',
+        'salary_max',
+        'location',
+        'work_type',
+        'experience_level',
+        'deadline',
+        'status',
+    ];
 
-    public function company() {
+    protected function casts(): array
+    {
+        return [
+            'salary_min' => 'integer',
+            'salary_max' => 'integer',
+            'deadline' => 'date',
+            'work_type' => WorkType::class,
+            'experience_level' => ExperienceLevel::class,
+            'status' => JobStatus::class,
+        ];
+    }
+
+    public function company(): BelongsTo
+    {
         return $this->belongsTo(Company::class);
     }
 
-    public function categories() {
+    public function categories(): BelongsToMany
+    {
         return $this->belongsToMany(Category::class);
     }
 
-    public function skills() {
+    public function skills(): BelongsToMany
+    {
         return $this->belongsToMany(Skill::class);
     }
 
-    public function applications() {
+    public function applications(): HasMany
+    {
         return $this->hasMany(Application::class);
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
     }
 }

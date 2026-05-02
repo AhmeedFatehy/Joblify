@@ -3,15 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Job;
-use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Comment extends Model
 {
-    public function job() {
+    protected $fillable = [
+        'job_id',
+        'user_id',
+        'content',
+    ];
+
+    public function job(): BelongsTo
+    {
         return $this->belongsTo(Job::class);
     }
-    public function user() {
+
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 }
