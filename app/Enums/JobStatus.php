@@ -2,8 +2,11 @@
 
 namespace App\Enums;
 
+use App\Traits\HasEnumValues;
+
 enum JobStatus: string
 {
+    use HasEnumValues;
     case PENDING = 'pending';
     case APPROVED = 'approved';
     case REJECTED = 'rejected';

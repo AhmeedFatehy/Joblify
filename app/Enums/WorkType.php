@@ -2,8 +2,11 @@
 
 namespace App\Enums;
 
+use App\Traits\HasEnumValues;
+
 enum WorkType: string
 {
+    use HasEnumValues;
     case REMOTE = 'remote';
     case ONSITE = 'onsite';
     case HYBRID = 'hybrid';
