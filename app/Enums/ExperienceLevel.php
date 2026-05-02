@@ -2,8 +2,11 @@
 
 namespace App\Enums;
 
+use App\Traits\HasEnumValues;
+
 enum ExperienceLevel: string
 {
+    use HasEnumValues;
     case ENTRY = 'entry';
     case MID = 'mid';
     case SENIOR = 'senior';

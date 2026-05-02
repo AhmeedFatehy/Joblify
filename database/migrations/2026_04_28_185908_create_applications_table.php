@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApplicationStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -19,8 +20,8 @@ return new class extends Migration
             $table->string('resume')->nullable();
             $table->text('cover_letter')->nullable();
 
-            $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
-            
+            $table->enum('status', ApplicationStatus::values())->default(ApplicationStatus::PENDING->value);
+
             $table->unique(['job_id', 'user_id']);
             $table->timestamps();
         });

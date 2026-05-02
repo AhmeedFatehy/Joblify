@@ -2,8 +2,12 @@
 
 namespace App\Enums;
 
+
+use App\Traits\HasEnumValues;
+
 enum UserRole: string
 {
+    use HasEnumValues;
     case CANDIDATE = 'candidate';
     case EMPLOYER = 'employer';
     case ADMIN = 'admin';

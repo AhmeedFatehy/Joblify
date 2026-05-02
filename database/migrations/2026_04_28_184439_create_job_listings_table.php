@@ -1,5 +1,8 @@
 <?php
 
+use App\Enums\ExperienceLevel;
+use App\Enums\JobStatus;
+use App\Enums\WorkType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -24,12 +27,12 @@ return new class extends Migration
             $table->integer('salary_max')->nullable();
 
             $table->string('location');
-            $table->enum('work_type', ['remote', 'onsite', 'hybrid']);
-            $table->string('experience_level')->nullable();
+            $table->enum('work_type', WorkType::values());
+            $table->enum('experience_level', ExperienceLevel::values());
 
             $table->date('deadline')->nullable();
 
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->enum('status', JobStatus::values())->default(JobStatus::PENDING->value);
             $table->timestamps();
         });
     }
