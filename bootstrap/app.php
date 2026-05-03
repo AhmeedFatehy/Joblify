@@ -25,11 +25,16 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\PrefersJsonResponses::class,
         ]);
     })
+    ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'role' => \App\Http\Middleware\CheckRole::class,
+        ]);
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Convert all exceptions to JSON for API-only app
         $exceptions->shouldRenderJsonWhen(function (Request $request): bool {
             return true;
-        });
+        });    
 
         // ValidationException -> 422
         $exceptions->render(function (ValidationException $e, Request $request) {
