@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Gate::before(function ($user, $ability) {
+            return $user->role->value === 'admin' ? true : null;
+        });
+
+        //user can update his profile only
+        Gate::define('update-profile', function (User $user, User $targetUser) {
+            return $user->id === $targetUser->id;
+        });
+
         $this->configureDefaults();
     }
 
