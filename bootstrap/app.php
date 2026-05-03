@@ -21,9 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Force JSON responses for API requests
-        $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\AcceptJson::class,
-        ]);
+        // $middleware->api(prepend: [
+        //     \Illuminate\Http\Middleware\AcceptJson::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Convert all exceptions to JSON for API-only app
