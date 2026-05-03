@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Force JSON responses for API requests
         $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\AcceptJson::class,
+            \Illuminate\Http\Middleware\PrefersJsonResponses::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -74,6 +74,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // AuthorizationException -> 403
         $exceptions->render(function (AuthorizationException $e, Request $request) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'This action is unauthorized',
+            ], 403);
+        });
+
+        // AccessDeniedHttpException -> 403
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Request $request) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() ?: 'This action is unauthorized',
