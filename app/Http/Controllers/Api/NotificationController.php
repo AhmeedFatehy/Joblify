@@ -43,14 +43,14 @@ class NotificationController extends BaseApiController
      * Mark a single notification as read.
      * PATCH /notifications/{notification}/read
      */
-    public function markRead(Notification $notification): JsonResponse
-    {
-        $this->authorizeNotification($notification);
+    // public function markRead(Notification $notification): JsonResponse
+    // {
+    //     $this->authorizeNotification($notification);
 
-        $notification->update(['is_read' => true]);
+    //     $notification->update(['is_read' => true]);
 
-        return $this->success($notification, 'Notification marked as read');
-    }
+    //     return $this->success($notification, 'Notification marked as read');
+    // }
 
     /**
      * Mark all notifications as read.
@@ -69,18 +69,18 @@ class NotificationController extends BaseApiController
         return $this->success(null, 'All notifications marked as read');
     }
 
-    /**
-     * Delete a notification.
-     * DELETE /notifications/{notification}
-     */
-    public function destroy(Notification $notification): JsonResponse
-    {
-        $this->authorizeNotification($notification);
+    // /**
+    //  * Delete a notification.
+    //  * DELETE /notifications/{notification}
+    //  */
+    // public function destroy(Notification $notification): JsonResponse
+    // {
+    //     $this->authorizeNotification($notification);
 
-        $notification->delete();
+    //     $notification->delete();
 
-        return $this->noContent('Notification deleted');
-    }
+    //     return $this->noContent('Notification deleted');
+    // }
 
     // ---------------------------------------------------------------------------
     // Helpers
@@ -92,4 +92,27 @@ class NotificationController extends BaseApiController
             abort(403, 'This action is unauthorized');
         }
     }
+
+
+    public function markRead(Notification $notification): JsonResponse
+{
+    if ($notification->user_id !== Auth::id()) {
+        return $this->error('This action is unauthorized', 403);
+    }
+
+    $notification->update(['is_read' => true]);
+
+    return $this->success($notification, 'Notification marked as read');
+}
+
+public function destroy(Notification $notification): JsonResponse
+{
+    if ($notification->user_id !== Auth::id()) {
+        return $this->error('This action is unauthorized', 403);
+    }
+
+    $notification->delete();
+
+    return $this->noContent('Notification deleted');
+}
 }

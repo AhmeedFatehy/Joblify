@@ -40,12 +40,12 @@ test('admin can filter comments by job', function () {
     $admin = User::factory()->create(['role' => UserRole::ADMIN]);
     $job   = \App\Models\Job::factory()->approved()->create();
     Comment::factory(3)->create(['job_id' => $job->id]);
-    Comment::factory(2)->create(); // different jobs
+    Comment::factory(2)->create();
 
     $response = $this->actingAs($admin)
         ->getJson("/api/admin/comments?job_id={$job->id}")
         ->assertOk()
         ->json();
 
-    expect($response['data']['total'])->toBe(3);
+    expect($response['meta']['total'])->toBe(3); 
 });
