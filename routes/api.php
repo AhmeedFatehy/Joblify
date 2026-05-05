@@ -2,57 +2,63 @@
 
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\EmployerAnalyticsController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\Admin\AdminCommentController;
+use App\Http\Controllers\Api\Admin\AdminDashboardController;
+use App\Http\Controllers\Api\Admin\AdminJobController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| All routes in this file are stateless and assigned the "api" middleware
-| group by default. Responses are always JSON.
-|
-*/
-// Public Routes
+
+
+// public
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login',    [AuthController::class, 'login']);
 
-// --- Protected Routes ---
+// Protected 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
 
+    Route::get('/user', fn (Request $request) => $request->user());
     Route::post('/logout', [AuthController::class, 'logout']);
-    
+
+    //  Applications 
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store']);
 
+    //  Comments 
+    Route::get('/jobs/{job}/comments',    [CommentController::class, 'index']);
+    Route::post('/jobs/{job}/comments',   [CommentController::class, 'store']);
+    Route::put('/comments/{comment}',     [CommentController::class, 'update']);
+    Route::delete('/comments/{comment}',  [CommentController::class, 'destroy']);
 
-    //Role-Based Routes
+    //  Notifications 
+    Route::get('/notifications',                         [NotificationController::class, 'index']);
+    Route::post('/notifications/read-all',               [NotificationController::class, 'markAllRead']);
+    Route::patch('/notifications/{notification}/read',   [NotificationController::class, 'markRead']);
+    Route::delete('/notifications/{notification}',       [NotificationController::class, 'destroy']);
 
-    //Note to Team: Use 'role:admin', 'role:employer', or 'role:candidate' to protect your specific routes.
-    
-    // Example for Admin Routes:
-    // Route::middleware('role:admin')->group(function () {
-    //     Route::get('/admin/dashboard', [AdminController::class, 'index']);
-    // });
+    //  Employer Analytics 
+    Route::middleware('role:employer')->group(function () {
+        Route::get('/employer/analytics',                              [EmployerAnalyticsController::class, 'index']);
+        Route::get('/employer/jobs/{job}/applications',                [EmployerAnalyticsController::class, 'jobApplications']);
+        Route::patch('/employer/applications/{application}',           [EmployerAnalyticsController::class, 'updateApplicationStatus']);
+    });
+
+    //  Admin 
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        // Dashboard
+        Route::get('/dashboard',          [AdminDashboardController::class, 'index']);
+        Route::get('/dashboard/activity', [AdminDashboardController::class, 'activity']);
+
+        // Job Moderation
+        Route::get('/jobs',                  [AdminJobController::class, 'index']);
+        Route::post('/jobs/{job}/approve',   [AdminJobController::class, 'approve']);
+        Route::post('/jobs/{job}/reject',    [AdminJobController::class, 'reject']);
+
+        // Comment Moderation
+        Route::get('/comments',              [AdminCommentController::class, 'index']);
+        Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy']);
+    });
 
 });
-
-
-
-// TODO: Implement these controllers in their respective Epic tasks
-// Route::apiResource('jobs', App\Http\Controllers\Api\JobController::class);
-// Route::apiResource('companies', App\Http\Controllers\Api\CompanyController::class);
-// Route::apiResource('categories', App\Http\Controllers\Api\CategoryController::class);
-// Route::apiResource('skills', App\Http\Controllers\Api\SkillController::class);
-// Route::apiResource('notifications', App\Http\Controllers\Api\NotificationController::class);
-// Route::apiResource('applications', App\Http\Controllers\Api\ApplicationController::class);
-// Route::apiResource('comments', App\Http\Controllers\Api\CommentController::class);
-
-
-//when create admin routes use role:admin middleware
-// Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
-//     Route::get('/admin/stats', [AdminController::class, 'index']);
-// });

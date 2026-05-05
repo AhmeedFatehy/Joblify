@@ -2,48 +2,94 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Models\Notification;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends BaseApiController
 {
     /**
-     * Display a listing of the resource.
+     * List all notifications for the authenticated user.
+     * GET /notifications
      */
-    public function index()
+    public function index(Request $request): JsonResponse
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        $notifications = $user
+            ->notifications()
+            ->when(
+                $request->boolean('unread'),
+                fn ($q) => $q->where('is_read', false)
+            )
+            ->latest()
+            ->paginate(20);
+
+        $unreadCount = $user
+            ->notifications()
+            ->where('is_read', false)
+            ->count();
+
+        return $this->success([
+            'notifications' => $notifications,
+            'unread_count'  => $unreadCount,
+        ], 'Notifications retrieved successfully');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Mark a single notification as read.
+     * PATCH /notifications/{notification}/read
      */
-    public function store(Request $request)
+    public function markRead(Notification $notification): JsonResponse
     {
-        //
+        $this->authorizeNotification($notification);
+
+        $notification->update(['is_read' => true]);
+
+        return $this->success($notification, 'Notification marked as read');
     }
 
     /**
-     * Display the specified resource.
+     * Mark all notifications as read.
+     * POST /notifications/read-all
      */
-    public function show(string $id)
+    public function markAllRead(): JsonResponse
     {
-        //
+        /** @var User $user */
+        $user = Auth::user();
+
+        $user
+            ->notifications()
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        return $this->success(null, 'All notifications marked as read');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Delete a notification.
+     * DELETE /notifications/{notification}
      */
-    public function update(Request $request, string $id)
+    public function destroy(Notification $notification): JsonResponse
     {
-        //
+        $this->authorizeNotification($notification);
+
+        $notification->delete();
+
+        return $this->noContent('Notification deleted');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    // ---------------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------------
+
+    private function authorizeNotification(Notification $notification): void
     {
-        //
+        if ($notification->user_id !== Auth::id()) {
+            abort(403, 'This action is unauthorized');
+        }
     }
 }
