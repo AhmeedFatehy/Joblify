@@ -2,48 +2,79 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Models\Comment;
+use App\Models\Job;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CommentController extends BaseApiController
 {
     /**
-     * Display a listing of the resource.
+     * List all comments for a job.
+     * GET /jobs/{job}/comments
      */
-    public function index()
+    public function index(Job $job): JsonResponse
     {
-        //
+        $comments = $job->comments()
+            ->with('user:id,name')
+            ->latest()
+            ->paginate(20);
+
+        return $this->paginated($comments, 'Comments retrieved successfully');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Post a comment on a job.
+     * POST /jobs/{job}/comments
      */
-    public function store(Request $request)
+    public function store(Request $request, Job $job): JsonResponse
     {
-        //
+        $request->validate([
+            'content' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $comment = $job->comments()->create([
+            'user_id' => Auth::id(),
+            'content' => $request->content,
+        ]);
+
+        return $this->created(
+            $comment->load('user:id,name'),
+            'Comment posted successfully'
+        );
     }
 
     /**
-     * Display the specified resource.
+     * Update the authenticated user's comment.
+     * PUT /comments/{comment}
      */
-    public function show(string $id)
+    public function update(Request $request, Comment $comment): JsonResponse
     {
-        //
+        $this->authorize('update', $comment);
+
+        $request->validate([
+            'content' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $comment->update(['content' => $request->content]);
+
+        return $this->success(
+            $comment->load('user:id,name'),
+            'Comment updated successfully'
+        );
     }
 
     /**
-     * Update the specified resource in storage.
+     * Delete own comment (candidates/employers) or any comment (admin via policy).
+     * DELETE /comments/{comment}
      */
-    public function update(Request $request, string $id)
+    public function destroy(Comment $comment): JsonResponse
     {
-        //
-    }
+        $this->authorize('delete', $comment);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $comment->delete();
+
+        return $this->noContent('Comment deleted successfully');
     }
 }
