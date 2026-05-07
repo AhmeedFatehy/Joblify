@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
 use App\Http\Requests\Apply\StoreApplicationRequest;
 use App\Http\Resources\ApplicationResource;
@@ -11,6 +12,7 @@ use App\Services\ApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ApplicationController extends BaseApiController
 {
@@ -47,6 +49,39 @@ class ApplicationController extends BaseApiController
                 'from' => $applications->firstItem(),
                 'to' => $applications->lastItem(),
             ]);
+    }
+
+    /**
+     * List all applications for a specific job.
+     * GET /jobs/{job}/applications
+     */
+    public function jobApplications(Request $request, Job $job): JsonResponse
+    {
+        if (Auth::user()->id !== $job->company->user_id) {
+            return $this->forbidden('You do not own this job posting.');
+        }
+
+        $request->validate([
+            'status' => ['sometimes', Rule::in(ApplicationStatus::values())],
+        ]);
+
+        $applications = $this->applicationService
+            ->getJobApplicationsQuery($job, $request->query('status'))
+            ->paginate(15);
+
+        return $this->success(
+            ApplicationResource::collection($applications),
+            'Applications retrieved successfully',
+            200,
+            [
+                'current_page' => $applications->currentPage(),
+                'last_page' => $applications->lastPage(),
+                'per_page' => $applications->perPage(),
+                'total' => $applications->total(),
+                'from' => $applications->firstItem(),
+                'to' => $applications->lastItem(),
+            ]
+        );
     }
 
     /**

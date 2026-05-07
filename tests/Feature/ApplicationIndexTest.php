@@ -302,6 +302,117 @@ it('prevents an employer from withdrawing an application', function () {
 // Note: Admins bypass all policies via Gate::before in AppServiceProvider,
 // so they CAN withdraw applications. This is consistent with the platform design.
 
+// ─────────────────────────────────────────────────────────────
+// GET /jobs/{job}/applications (Employer)
+// ─────────────────────────────────────────────────────────────
+
+it('allows an employer to view applications for their job', function () {
+    $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $company = Company::factory()->create(['user_id' => $employer->id]);
+    $job = Job::factory()->approved()->create(['company_id' => $company->id]);
+
+    Application::factory()->count(3)->create(['job_id' => $job->id]);
+
+    $response = $this->actingAs($employer, 'sanctum')
+        ->getJson("/api/jobs/{$job->id}/applications");
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('message', 'Applications retrieved successfully')
+        ->assertJsonCount(3, 'data')
+        ->assertJsonPath('meta.total', 3);
+});
+
+it('allows an employer to filter applications by status', function () {
+    $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $company = Company::factory()->create(['user_id' => $employer->id]);
+    $job = Job::factory()->approved()->create(['company_id' => $company->id]);
+
+    Application::factory()->count(2)->create(['job_id' => $job->id, 'status' => ApplicationStatus::PENDING]);
+    Application::factory()->count(1)->create(['job_id' => $job->id, 'status' => ApplicationStatus::ACCEPTED]);
+    Application::factory()->count(1)->create(['job_id' => $job->id, 'status' => ApplicationStatus::REJECTED]);
+
+    $response = $this->actingAs($employer, 'sanctum')
+        ->getJson("/api/jobs/{$job->id}/applications?status=pending");
+
+    $response->assertOk()
+        ->assertJsonPath('meta.total', 2)
+        ->assertJsonPath('data.0.status', 'pending');
+});
+
+it('includes candidate info and resume url for employer view', function () {
+    $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $company = Company::factory()->create(['user_id' => $employer->id]);
+    $job = Job::factory()->approved()->create(['company_id' => $company->id]);
+    $candidate = User::factory()->create([
+        'role' => UserRole::CANDIDATE,
+        'phone' => '+1234567890',
+        'linkedin_url' => 'https://linkedin.com/in/candidate',
+    ]);
+    Application::factory()->create(['job_id' => $job->id, 'user_id' => $candidate->id]);
+
+    $response = $this->actingAs($employer, 'sanctum')
+        ->getJson("/api/jobs/{$job->id}/applications");
+
+    $response->assertOk();
+
+    $app = $response->json('data.0');
+    expect($app['user'])->toHaveKey('phone')
+        ->and($app['user']['phone'])->toBe('+1234567890')
+        ->and($app['user'])->toHaveKey('linkedin_url')
+        ->and($app['user']['linkedin_url'])->toBe('https://linkedin.com/in/candidate')
+        ->and($app)->toHaveKey('resume_url')
+        ->and($app['resume_url'])->not->toBeNull();
+});
+
+it('prevents a non-owner employer from viewing job applications', function () {
+    $employerA = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $employerB = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $companyB = Company::factory()->create(['user_id' => $employerB->id]);
+    $job = Job::factory()->approved()->create(['company_id' => $companyB->id]);
+
+    Application::factory()->count(2)->create(['job_id' => $job->id]);
+
+    $response = $this->actingAs($employerA, 'sanctum')
+        ->getJson("/api/jobs/{$job->id}/applications");
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('message', 'You do not own this job posting.');
+});
+
+it('prevents a candidate from viewing job applications', function () {
+    $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $job = Job::factory()->approved()->create();
+
+    $response = $this->actingAs($candidate, 'sanctum')
+        ->getJson("/api/jobs/{$job->id}/applications");
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('rejects unauthenticated job applications requests', function () {
+    $job = Job::factory()->approved()->create();
+
+    $response = $this->getJson("/api/jobs/{$job->id}/applications");
+
+    $response->assertUnauthorized()
+        ->assertJsonPath('success', false);
+});
+
+it('rejects invalid status filter values', function () {
+    $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $company = Company::factory()->create(['user_id' => $employer->id]);
+    $job = Job::factory()->approved()->create(['company_id' => $company->id]);
+
+    $response = $this->actingAs($employer, 'sanctum')
+        ->getJson("/api/jobs/{$job->id}/applications?status=invalid");
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['status']);
+});
+
 it('rejects unauthenticated delete requests', function () {
     $application = Application::factory()->create();
 

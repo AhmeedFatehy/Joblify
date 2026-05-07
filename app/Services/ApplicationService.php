@@ -9,6 +9,7 @@ use App\Http\Requests\Apply\StoreApplicationRequest;
 use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Contracts\Filesystem\Factory as StorageFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class ApplicationService
@@ -42,6 +43,22 @@ class ApplicationService
     public function getAllQuery()
     {
         return Application::with(['job', 'user']);
+    }
+
+    /**
+     * Build a query for applications on a specific job.
+     *
+     * @return Builder<Application>
+     */
+    public function getJobApplicationsQuery(Job $job, ?string $status = null)
+    {
+        $query = $job->applications()->with(['user', 'job.company']);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->latest();
     }
 
     /**
