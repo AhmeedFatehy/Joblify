@@ -5,15 +5,16 @@ use App\Enums\UserRole;
 use App\Models\Application;
 use App\Models\Company;
 use App\Models\Job;
-use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 function employerWithCompany(): User
 {
     $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
     Company::factory()->create(['user_id' => $employer->id]);
+
     return $employer;
 }
 
@@ -49,7 +50,7 @@ test('candidate cannot access employer analytics', function () {
 
 test('employer can view applications for their job', function () {
     $employer = employerWithCompany();
-    $job      = Job::factory()->create(['company_id' => $employer->company->id]);
+    $job = Job::factory()->create(['company_id' => $employer->company->id]);
     Application::factory(3)->create(['job_id' => $job->id]);
 
     $this->actingAs($employer)
@@ -58,9 +59,9 @@ test('employer can view applications for their job', function () {
 });
 
 test('employer cannot view applications for another employer\'s job', function () {
-    $employer  = employerWithCompany();
+    $employer = employerWithCompany();
     $employer2 = employerWithCompany();
-    $job       = Job::factory()->create(['company_id' => $employer2->company->id]);
+    $job = Job::factory()->create(['company_id' => $employer2->company->id]);
 
     $this->actingAs($employer)
         ->getJson("/api/employer/jobs/{$job->id}/applications")
@@ -70,8 +71,8 @@ test('employer cannot view applications for another employer\'s job', function (
 // ── Update Application Status ─────────────────────────────────────────────────
 
 test('employer can accept an application for their job', function () {
-    $employer    = employerWithCompany();
-    $job         = Job::factory()->create(['company_id' => $employer->company->id]);
+    $employer = employerWithCompany();
+    $job = Job::factory()->create(['company_id' => $employer->company->id]);
     $application = Application::factory()->create(['job_id' => $job->id]);
 
     $this->actingAs($employer)
@@ -84,8 +85,8 @@ test('employer can accept an application for their job', function () {
 });
 
 test('accepting application sends notification to candidate', function () {
-    $employer    = employerWithCompany();
-    $job         = Job::factory()->create(['company_id' => $employer->company->id]);
+    $employer = employerWithCompany();
+    $job = Job::factory()->create(['company_id' => $employer->company->id]);
     $application = Application::factory()->create(['job_id' => $job->id]);
 
     $this->actingAs($employer)->patchJson("/api/employer/applications/{$application->id}", [
@@ -94,14 +95,14 @@ test('accepting application sends notification to candidate', function () {
 
     $this->assertDatabaseHas('notifications', [
         'user_id' => $application->user_id,
-        'type'    => 'application_status_changed',
+        'type' => 'application_status_changed',
     ]);
 });
 
 test('employer cannot update application for another employer\'s job', function () {
-    $employer1   = employerWithCompany();
-    $employer2   = employerWithCompany();
-    $job         = Job::factory()->create(['company_id' => $employer2->company->id]);
+    $employer1 = employerWithCompany();
+    $employer2 = employerWithCompany();
+    $job = Job::factory()->create(['company_id' => $employer2->company->id]);
     $application = Application::factory()->create(['job_id' => $job->id]);
 
     $this->actingAs($employer1)
@@ -112,8 +113,8 @@ test('employer cannot update application for another employer\'s job', function 
 });
 
 test('status must be accepted or rejected', function () {
-    $employer    = employerWithCompany();
-    $job         = Job::factory()->create(['company_id' => $employer->company->id]);
+    $employer = employerWithCompany();
+    $job = Job::factory()->create(['company_id' => $employer->company->id]);
     $application = Application::factory()->create(['job_id' => $job->id]);
 
     $this->actingAs($employer)

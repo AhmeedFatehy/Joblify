@@ -1,11 +1,12 @@
 <?php
 
 namespace Database\Seeders;
-use Illuminate\Support\Facades\Hash;
+
 use App\Enums\UserRole;
 use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,8 +27,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'password' => Hash::make('admin_password'),
-                'role' => UserRole::ADMIN, 
+                'role' => UserRole::ADMIN,
             ]
         );
-}
+    }
 }

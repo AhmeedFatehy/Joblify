@@ -4,8 +4,9 @@ use App\Enums\JobStatus;
 use App\Enums\UserRole;
 use App\Models\Job;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ test('non-admin cannot access admin jobs list', function () {
 
 test('admin can approve a pending job', function () {
     $admin = adminUser();
-    $job   = pendingJob();
+    $job = pendingJob();
 
     $this->actingAs($admin)
         ->postJson("/api/admin/jobs/{$job->id}/approve")
@@ -55,7 +56,7 @@ test('admin can approve a pending job', function () {
 
 test('admin cannot approve an already-approved job', function () {
     $admin = adminUser();
-    $job   = Job::factory()->approved()->create();
+    $job = Job::factory()->approved()->create();
 
     $this->actingAs($admin)
         ->postJson("/api/admin/jobs/{$job->id}/approve")
@@ -64,13 +65,13 @@ test('admin cannot approve an already-approved job', function () {
 
 test('approving a job notifies the employer', function () {
     $admin = adminUser();
-    $job   = pendingJob();
+    $job = pendingJob();
 
     $this->actingAs($admin)->postJson("/api/admin/jobs/{$job->id}/approve");
 
     $this->assertDatabaseHas('notifications', [
         'user_id' => $job->company->user_id,
-        'type'    => 'job_approved',
+        'type' => 'job_approved',
     ]);
 });
 
@@ -78,7 +79,7 @@ test('approving a job notifies the employer', function () {
 
 test('admin can reject a pending job with a reason', function () {
     $admin = adminUser();
-    $job   = pendingJob();
+    $job = pendingJob();
 
     $this->actingAs($admin)
         ->postJson("/api/admin/jobs/{$job->id}/reject", ['reason' => 'Violates guidelines.'])
@@ -90,7 +91,7 @@ test('admin can reject a pending job with a reason', function () {
 
 test('rejection requires a reason', function () {
     $admin = adminUser();
-    $job   = pendingJob();
+    $job = pendingJob();
 
     $this->actingAs($admin)
         ->postJson("/api/admin/jobs/{$job->id}/reject", [])
@@ -99,12 +100,12 @@ test('rejection requires a reason', function () {
 
 test('rejecting a job notifies the employer', function () {
     $admin = adminUser();
-    $job   = pendingJob();
+    $job = pendingJob();
 
     $this->actingAs($admin)->postJson("/api/admin/jobs/{$job->id}/reject", ['reason' => 'Spam.']);
 
     $this->assertDatabaseHas('notifications', [
         'user_id' => $job->company->user_id,
-        'type'    => 'job_rejected',
+        'type' => 'job_rejected',
     ]);
 });

@@ -2,9 +2,11 @@
 
 use App\Enums\UserRole;
 use App\Models\Comment;
+use App\Models\Job;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('admin can list all comments', function () {
     $admin = User::factory()->create(['role' => UserRole::ADMIN]);
@@ -17,7 +19,7 @@ test('admin can list all comments', function () {
 });
 
 test('admin can remove any comment', function () {
-    $admin   = User::factory()->create(['role' => UserRole::ADMIN]);
+    $admin = User::factory()->create(['role' => UserRole::ADMIN]);
     $comment = Comment::factory()->create();
 
     $this->actingAs($admin)
@@ -29,7 +31,7 @@ test('admin can remove any comment', function () {
 
 test('non-admin cannot access admin comment moderation', function () {
     $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
-    $comment  = Comment::factory()->create();
+    $comment = Comment::factory()->create();
 
     $this->actingAs($employer)
         ->deleteJson("/api/admin/comments/{$comment->id}")
@@ -38,7 +40,7 @@ test('non-admin cannot access admin comment moderation', function () {
 
 test('admin can filter comments by job', function () {
     $admin = User::factory()->create(['role' => UserRole::ADMIN]);
-    $job   = \App\Models\Job::factory()->approved()->create();
+    $job = Job::factory()->approved()->create();
     Comment::factory(3)->create(['job_id' => $job->id]);
     Comment::factory(2)->create();
 
@@ -47,5 +49,5 @@ test('admin can filter comments by job', function () {
         ->assertOk()
         ->json();
 
-    expect($response['meta']['total'])->toBe(3); 
+    expect($response['meta']['total'])->toBe(3);
 });

@@ -34,7 +34,7 @@ class AdminJobController extends BaseApiController
     {
         if ($job->status !== JobStatus::PENDING) {
             return $this->error(
-                'Only pending jobs can be approved. Current status: ' . $job->status->value,
+                'Only pending jobs can be approved. Current status: '.$job->status->value,
                 422
             );
         }
@@ -43,7 +43,7 @@ class AdminJobController extends BaseApiController
 
         // Notify the employer
         $job->company->user->notifications()->create([
-            'type'    => 'job_approved',
+            'type' => 'job_approved',
             'message' => "Your job posting \"{$job->title}\" has been approved and is now live.",
             'is_read' => false,
         ]);
@@ -66,7 +66,7 @@ class AdminJobController extends BaseApiController
 
         if ($job->status !== JobStatus::PENDING) {
             return $this->error(
-                'Only pending jobs can be rejected. Current status: ' . $job->status->value,
+                'Only pending jobs can be rejected. Current status: '.$job->status->value,
                 422
             );
         }
@@ -75,7 +75,7 @@ class AdminJobController extends BaseApiController
 
         // Notify the employer with the rejection reason
         $job->company->user->notifications()->create([
-            'type'    => 'job_rejected',
+            'type' => 'job_rejected',
             'message' => "Your job posting \"{$job->title}\" was rejected. Reason: {$request->reason}",
             'is_read' => false,
         ]);

@@ -10,9 +10,6 @@ trait ApiResponse
     /**
      * Return a standardized success JSON response.
      *
-     * @param  mixed  $data
-     * @param  string  $message
-     * @param  int  $statusCode
      * @param  array<string, mixed>  $meta
      */
     protected function success(
@@ -39,10 +36,6 @@ trait ApiResponse
 
     /**
      * Return a paginated success JSON response.
-     *
-     * @param  LengthAwarePaginator  $paginator
-     * @param  string  $message
-     * @param  int  $statusCode
      */
     protected function paginated(
         LengthAwarePaginator $paginator,
@@ -66,9 +59,6 @@ trait ApiResponse
 
     /**
      * Return a 201 Created response.
-     *
-     * @param  mixed  $data
-     * @param  string  $message
      */
     protected function created(mixed $data = null, string $message = 'Resource created successfully'): JsonResponse
     {
@@ -77,8 +67,6 @@ trait ApiResponse
 
     /**
      * Return a 204 No Content response.
-     *
-     * @param  string  $message
      */
     protected function noContent(string $message = 'No content'): JsonResponse
     {
@@ -88,8 +76,6 @@ trait ApiResponse
     /**
      * Return a standardized error JSON response.
      *
-     * @param  string  $message
-     * @param  int  $statusCode
      * @param  array<string, mixed>|null  $errors
      */
     protected function error(
@@ -111,8 +97,6 @@ trait ApiResponse
 
     /**
      * Return a 404 Not Found response.
-     *
-     * @param  string  $message
      */
     protected function notFound(string $message = 'Resource not found'): JsonResponse
     {
@@ -121,8 +105,6 @@ trait ApiResponse
 
     /**
      * Return a 403 Forbidden response.
-     *
-     * @param  string  $message
      */
     protected function forbidden(string $message = 'This action is unauthorized'): JsonResponse
     {
@@ -131,8 +113,6 @@ trait ApiResponse
 
     /**
      * Return a 401 Unauthorized response.
-     *
-     * @param  string  $message
      */
     protected function unauthorized(string $message = 'Unauthenticated'): JsonResponse
     {

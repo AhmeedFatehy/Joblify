@@ -2,7 +2,6 @@
 
 namespace App\Enums;
 
-
 use App\Traits\HasEnumValues;
 
 enum UserRole: string

@@ -15,12 +15,13 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!$request->user() || $request->user()->role->value !== $role) {
+        if (! $request->user() || $request->user()->role->value !== $role) {
             return response()->json([
                 'success' => false,
-                'message' => 'This action is unauthorized'
-            ], 403); 
+                'message' => 'This action is unauthorized',
+            ], 403);
         }
+
         return $next($request);
     }
 }
