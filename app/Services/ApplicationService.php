@@ -39,6 +39,11 @@ class ApplicationService
         ]);
     }
 
+    public function getAllQuery()
+    {
+        return Application::with(['job', 'user']);
+    }
+
     /**
      * Generate a public URL for a stored resume.
      */
