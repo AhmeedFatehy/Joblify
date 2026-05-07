@@ -90,6 +90,14 @@ class ApplicationController extends BaseApiController
      */
     public function destroy(Application $application): JsonResponse
     {
-        //
+        $this->authorize('delete', $application);
+
+        if (! $application->status->isPending()) {
+            return $this->error('Only pending applications can be withdrawn.', 422);
+        }
+
+        $application->delete();
+
+        return $this->noContent('Application withdrawn successfully');
     }
 }

@@ -214,3 +214,98 @@ it('rejects unauthenticated show requests', function () {
     $response->assertUnauthorized()
         ->assertJsonPath('success', false);
 });
+
+// ─────────────────────────────────────────────────────────────
+// DELETE /applications/{id}
+// ─────────────────────────────────────────────────────────────
+
+it('allows a candidate to withdraw their own pending application', function () {
+    $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->create([
+        'user_id' => $candidate->id,
+        'status' => \App\Enums\ApplicationStatus::PENDING,
+    ]);
+
+    $response = $this->actingAs($candidate, 'sanctum')
+        ->deleteJson("/api/applications/{$application->id}");
+
+    $response->assertStatus(204);
+
+    expect(Application::find($application->id))->toBeNull();
+});
+
+it('prevents withdrawing an accepted application', function () {
+    $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->accepted()->create([
+        'user_id' => $candidate->id,
+    ]);
+
+    $response = $this->actingAs($candidate, 'sanctum')
+        ->deleteJson("/api/applications/{$application->id}");
+
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('message', 'Only pending applications can be withdrawn.');
+
+    expect(Application::find($application->id))->not->toBeNull();
+});
+
+it('prevents withdrawing a rejected application', function () {
+    $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->rejected()->create([
+        'user_id' => $candidate->id,
+    ]);
+
+    $response = $this->actingAs($candidate, 'sanctum')
+        ->deleteJson("/api/applications/{$application->id}");
+
+    $response->assertStatus(422)
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('message', 'Only pending applications can be withdrawn.');
+
+    expect(Application::find($application->id))->not->toBeNull();
+});
+
+it('prevents a candidate from withdrawing another candidate application', function () {
+    $candidateA = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $candidateB = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->create([
+        'user_id' => $candidateB->id,
+        'status' => \App\Enums\ApplicationStatus::PENDING,
+    ]);
+
+    $response = $this->actingAs($candidateA, 'sanctum')
+        ->deleteJson("/api/applications/{$application->id}");
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false);
+
+    expect(Application::find($application->id))->not->toBeNull();
+});
+
+it('prevents an employer from withdrawing an application', function () {
+    $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $application = Application::factory()->create([
+        'status' => \App\Enums\ApplicationStatus::PENDING,
+    ]);
+
+    $response = $this->actingAs($employer, 'sanctum')
+        ->deleteJson("/api/applications/{$application->id}");
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false);
+
+    expect(Application::find($application->id))->not->toBeNull();
+});
+
+// Note: Admins bypass all policies via Gate::before in AppServiceProvider,
+// so they CAN withdraw applications. This is consistent with the platform design.
+
+it('rejects unauthenticated delete requests', function () {
+    $application = Application::factory()->create();
+
+    $response = $this->deleteJson("/api/applications/{$application->id}");
+
+    $response->assertUnauthorized()
+        ->assertJsonPath('success', false);
+});

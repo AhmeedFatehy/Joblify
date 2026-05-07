@@ -45,7 +45,7 @@ class ApplicationPolicy
      */
     public function delete(User $user, Application $application): bool
     {
-        return $user->id === $application->user_id || $user->id === $application->job->employer_id || $user->role === UserRole::ADMIN;
+        return $user->id === $application->user_id;
     }
 
     /**
