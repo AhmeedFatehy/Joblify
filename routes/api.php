@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //  Applications 
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store']);
+    Route::get('/applications', [ApplicationController::class, 'index']);
 
     //  Comments 
     Route::get('/jobs/{job}/comments',    [CommentController::class, 'index']);

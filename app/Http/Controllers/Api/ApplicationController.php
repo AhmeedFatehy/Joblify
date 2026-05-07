@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Apply\StoreApplicationRequest;
 use App\Models\Application;
 use App\Models\Job;
 use App\Services\ApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Enums\UserRole;
 
 class ApplicationController extends BaseApiController
 {
@@ -21,7 +22,18 @@ class ApplicationController extends BaseApiController
      */
     public function index(): JsonResponse
     {
-        //
+        $this->authorize('viewAny', Application::class);
+        $user = Auth::user();
+
+        $applicationsQuery = $this->applicationService->getAllQuery();
+
+        if($user->role === UserRole::CANDIDATE) {
+            $applicationsQuery->where('user_id', $user->id);
+        }
+        elseif ($user->role === UserRole::EMPLOYER) {
+            $applicationsQuery->whereHas('job.company', fn($q)=> $q->where('user_id', $user->id));
+        }
+        return $this->paginated($applicationsQuery->latest()->paginate(10), 'Applications retrieved successfully');
     }
 
     /**

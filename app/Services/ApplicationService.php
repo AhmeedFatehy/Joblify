@@ -9,6 +9,7 @@ use App\Http\Requests\Apply\StoreApplicationRequest;
 use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Contracts\Filesystem\Factory as StorageFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class ApplicationService
@@ -39,6 +40,9 @@ class ApplicationService
         ]);
     }
 
+    public function getAllQuery() {
+        return Application::with(['job', 'user']);
+    }
     /**
      * Generate a public URL for a stored resume.
      */
