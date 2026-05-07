@@ -35,7 +35,6 @@ class ApplicationResource extends JsonResource
                 'email' => $this->user->email,
             ],
 
-            
         ];
     }
 }

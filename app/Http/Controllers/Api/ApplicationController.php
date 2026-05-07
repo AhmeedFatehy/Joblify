@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\UserRole;
 use App\Http\Requests\Apply\StoreApplicationRequest;
 use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
@@ -10,7 +11,6 @@ use App\Services\ApplicationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\UserRole;
 
 class ApplicationController extends BaseApiController
 {
@@ -28,11 +28,10 @@ class ApplicationController extends BaseApiController
 
         $applicationsQuery = $this->applicationService->getAllQuery();
 
-        if($user->role === UserRole::CANDIDATE) {
+        if ($user->role === UserRole::CANDIDATE) {
             $applicationsQuery->where('user_id', $user->id);
-        }
-        elseif ($user->role === UserRole::EMPLOYER) {
-            $applicationsQuery->whereHas('job.company', fn($q)=> $q->where('user_id', $user->id));
+        } elseif ($user->role === UserRole::EMPLOYER) {
+            $applicationsQuery->whereHas('job.company', fn ($q) => $q->where('user_id', $user->id));
         }
         $applications = $applicationsQuery->latest()->paginate(10);
 
@@ -47,7 +46,7 @@ class ApplicationController extends BaseApiController
                 'total' => $applications->total(),
                 'from' => $applications->firstItem(),
                 'to' => $applications->lastItem(),
-                ]);    
+            ]);
     }
 
     /**
@@ -71,7 +70,7 @@ class ApplicationController extends BaseApiController
         $this->authorize('view', $application);
 
         $application->load(['job.company', 'user']);
-        
+
         return $this->success(
             ApplicationResource::make($application),
             'Application details retrieved successfully');

@@ -13,7 +13,7 @@ class ApplicationPolicy
      */
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, [UserRole::ADMIN, UserRole::CANDIDATE, UserRole::EMPLOYER], true);  
+        return in_array($user->role, [UserRole::ADMIN, UserRole::CANDIDATE, UserRole::EMPLOYER], true);
     }
 
     /**
@@ -37,7 +37,7 @@ class ApplicationPolicy
      */
     public function update(User $user, Application $application): bool
     {
-        return $user->id === $application->user_id ;
+        return $user->id === $application->user_id;
     }
 
     /**

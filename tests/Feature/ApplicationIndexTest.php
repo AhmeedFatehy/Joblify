@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
 use App\Models\Application;
 use App\Models\Company;
@@ -41,12 +42,12 @@ it('returns only own applications for a candidate', function () {
 
 it('returns only applications for jobs belonging to the employer', function () {
     $employerA = User::factory()->create(['role' => UserRole::EMPLOYER]);
-    $companyA  = Company::factory()->create(['user_id' => $employerA->id]);
-    $jobA      = Job::factory()->approved()->create(['company_id' => $companyA->id]);
+    $companyA = Company::factory()->create(['user_id' => $employerA->id]);
+    $jobA = Job::factory()->approved()->create(['company_id' => $companyA->id]);
 
     $employerB = User::factory()->create(['role' => UserRole::EMPLOYER]);
-    $companyB  = Company::factory()->create(['user_id' => $employerB->id]);
-    $jobB      = Job::factory()->approved()->create(['company_id' => $companyB->id]);
+    $companyB = Company::factory()->create(['user_id' => $employerB->id]);
+    $jobB = Job::factory()->approved()->create(['company_id' => $companyB->id]);
 
     Application::factory()->count(2)->create(['job_id' => $jobA->id]);
     Application::factory()->count(3)->create(['job_id' => $jobB->id]);
@@ -223,7 +224,7 @@ it('allows a candidate to withdraw their own pending application', function () {
     $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $application = Application::factory()->create([
         'user_id' => $candidate->id,
-        'status' => \App\Enums\ApplicationStatus::PENDING,
+        'status' => ApplicationStatus::PENDING,
     ]);
 
     $response = $this->actingAs($candidate, 'sanctum')
@@ -271,7 +272,7 @@ it('prevents a candidate from withdrawing another candidate application', functi
     $candidateB = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $application = Application::factory()->create([
         'user_id' => $candidateB->id,
-        'status' => \App\Enums\ApplicationStatus::PENDING,
+        'status' => ApplicationStatus::PENDING,
     ]);
 
     $response = $this->actingAs($candidateA, 'sanctum')
@@ -286,7 +287,7 @@ it('prevents a candidate from withdrawing another candidate application', functi
 it('prevents an employer from withdrawing an application', function () {
     $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
     $application = Application::factory()->create([
-        'status' => \App\Enums\ApplicationStatus::PENDING,
+        'status' => ApplicationStatus::PENDING,
     ]);
 
     $response = $this->actingAs($employer, 'sanctum')
