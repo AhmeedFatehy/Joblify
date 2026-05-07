@@ -6,8 +6,13 @@ use App\Models\Company;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Storage::fake('r2');
+});
 
 // ─────────────────────────────────────────────────────────────
 // Success Cases
@@ -30,7 +35,7 @@ it('returns only own applications for a candidate', function () {
 
     // Ensure every returned application belongs to candidateA
     collect($response->json('data'))->each(
-        fn (array $app) => expect($app['user_id'])->toBe($candidateA->id)
+        fn (array $app) => expect($app['user']['id'])->toBe($candidateA->id)
     );
 });
 
@@ -55,7 +60,7 @@ it('returns only applications for jobs belonging to the employer', function () {
 
     // Ensure every returned application is for a job owned by employerA's company
     collect($response->json('data'))->each(function (array $app) use ($employerA) {
-        $job = Job::find($app['job_id']);
+        $job = Job::find($app['job']['id']);
         expect($job->company->user_id)->toBe($employerA->id);
     });
 });
@@ -112,6 +117,99 @@ it('eager loads job and user relationships', function () {
 
 it('rejects unauthenticated requests', function () {
     $response = $this->getJson('/api/applications');
+
+    $response->assertUnauthorized()
+        ->assertJsonPath('success', false);
+});
+
+// ─────────────────────────────────────────────────────────────
+// GET /applications/{id}
+// ─────────────────────────────────────────────────────────────
+
+it('allows a candidate to view their own application detail', function () {
+    $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->create(['user_id' => $candidate->id]);
+
+    $response = $this->actingAs($candidate, 'sanctum')
+        ->getJson("/api/applications/{$application->id}");
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('message', 'Application details retrieved successfully')
+        ->assertJsonPath('data.id', $application->id)
+        ->assertJsonPath('data.status', $application->status->value)
+        ->assertJsonPath('data.status_label', $application->status->label())
+        ->assertJsonPath('data.job.id', $application->job->id)
+        ->assertJsonPath('data.job.title', $application->job->title)
+        ->assertJsonPath('data.job.company.id', $application->job->company->id)
+        ->assertJsonPath('data.job.company.name', $application->job->company->name)
+        ->assertJsonPath('data.user.id', $candidate->id)
+        ->assertJsonPath('data.user.name', $candidate->name)
+        ->assertJsonPath('data.user.email', $candidate->email)
+        ->assertJsonPath('data.cover_letter', $application->cover_letter)
+        ->assertJsonPath('data.created_at', $application->created_at->toDateTimeString());
+});
+
+it('allows an employer to view an application for their job', function () {
+    $employer = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $company = Company::factory()->create(['user_id' => $employer->id]);
+    $job = Job::factory()->approved()->create(['company_id' => $company->id]);
+    $application = Application::factory()->create(['job_id' => $job->id]);
+
+    $response = $this->actingAs($employer, 'sanctum')
+        ->getJson("/api/applications/{$application->id}");
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.id', $application->id);
+});
+
+it('allows an admin to view any application', function () {
+    $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+    $application = Application::factory()->create();
+
+    $response = $this->actingAs($admin, 'sanctum')
+        ->getJson("/api/applications/{$application->id}");
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.id', $application->id);
+});
+
+it('prevents a candidate from viewing another candidate application', function () {
+    $candidateA = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $candidateB = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->create(['user_id' => $candidateB->id]);
+
+    $response = $this->actingAs($candidateA, 'sanctum')
+        ->getJson("/api/applications/{$application->id}");
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('prevents an employer from viewing an application for another job', function () {
+    $employerA = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $companyA = Company::factory()->create(['user_id' => $employerA->id]);
+    $jobA = Job::factory()->approved()->create(['company_id' => $companyA->id]);
+
+    $employerB = User::factory()->create(['role' => UserRole::EMPLOYER]);
+    $companyB = Company::factory()->create(['user_id' => $employerB->id]);
+    $jobB = Job::factory()->approved()->create(['company_id' => $companyB->id]);
+
+    $application = Application::factory()->create(['job_id' => $jobB->id]);
+
+    $response = $this->actingAs($employerA, 'sanctum')
+        ->getJson("/api/applications/{$application->id}");
+
+    $response->assertForbidden()
+        ->assertJsonPath('success', false);
+});
+
+it('rejects unauthenticated show requests', function () {
+    $application = Application::factory()->create();
+
+    $response = $this->getJson("/api/applications/{$application->id}");
 
     $response->assertUnauthorized()
         ->assertJsonPath('success', false);

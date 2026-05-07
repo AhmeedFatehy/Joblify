@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Apply\StoreApplicationRequest;
+use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
 use App\Models\Job;
 use App\Services\ApplicationService;
@@ -33,7 +34,20 @@ class ApplicationController extends BaseApiController
         elseif ($user->role === UserRole::EMPLOYER) {
             $applicationsQuery->whereHas('job.company', fn($q)=> $q->where('user_id', $user->id));
         }
-        return $this->paginated($applicationsQuery->latest()->paginate(10), 'Applications retrieved successfully');
+        $applications = $applicationsQuery->latest()->paginate(10);
+
+        return $this->success(
+            ApplicationResource::collection($applications),
+            'Applications retrieved successfully',
+            200,
+            [
+                'current_page' => $applications->currentPage(),
+                'last_page' => $applications->lastPage(),
+                'per_page' => $applications->perPage(),
+                'total' => $applications->total(),
+                'from' => $applications->firstItem(),
+                'to' => $applications->lastItem(),
+                ]);    
     }
 
     /**
@@ -54,7 +68,13 @@ class ApplicationController extends BaseApiController
      */
     public function show(Application $application): JsonResponse
     {
-        //
+        $this->authorize('view', $application);
+
+        $application->load(['job.company', 'user']);
+        
+        return $this->success(
+            ApplicationResource::make($application),
+            'Application details retrieved successfully');
     }
 
     /**

@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Enums\ApplicationStatus;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Application extends Model
 {
@@ -35,4 +37,8 @@ class Application extends Model
     {
         return $this->belongsTo(User::class);
     }
+    protected function resumeUrl(): Attribute {
+    return Attribute::make(
+        get: fn () => \Storage::disk('r2')->url($this->resume),
+    );    }
 }
