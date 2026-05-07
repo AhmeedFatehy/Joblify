@@ -33,6 +33,8 @@ class ApplicationResource extends JsonResource
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
+                'phone' => $this->user->phone,
+                'linkedin_url' => $this->user->linkedin_url,
             ],
 
         ];

@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //  Applications
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store']);
+    Route::get('/jobs/{job}/applications', [ApplicationController::class, 'jobApplications']);
     Route::get('/applications', [ApplicationController::class, 'index']);
     Route::get('/applications/{application}', [ApplicationController::class, 'show']);
     Route::delete('/applications/{application}', [ApplicationController::class, 'destroy']);
