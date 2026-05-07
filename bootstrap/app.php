@@ -1,16 +1,19 @@
 <?php
 
+use App\Exceptions\ApiException;
+use App\Http\Middleware\CheckRole;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\PrefersJsonResponses;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use App\Exceptions\ApiException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,19 +25,19 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Force JSON responses for API requests
         $middleware->api(prepend: [
-            \Illuminate\Http\Middleware\PrefersJsonResponses::class,
+            PrefersJsonResponses::class,
         ]);
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\CheckRole::class,
+            'role' => CheckRole::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Convert all exceptions to JSON for API-only app
         $exceptions->shouldRenderJsonWhen(function (Request $request): bool {
             return true;
-        });    
+        });
 
         // ValidationException -> 422
         $exceptions->render(function (ValidationException $e, Request $request) {
@@ -86,7 +89,7 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         // AccessDeniedHttpException -> 403
-        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Request $request) {
+        $exceptions->render(function (AccessDeniedHttpException $e, Request $request) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() ?: 'This action is unauthorized',

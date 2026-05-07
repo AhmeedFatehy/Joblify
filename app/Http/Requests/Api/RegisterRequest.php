@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Http\Requests\BaseApiRequest;
 use App\Enums\UserRole;
-use Illuminate\Validation\Rules\Password;
+use App\Http\Requests\BaseApiRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends BaseApiRequest
 {

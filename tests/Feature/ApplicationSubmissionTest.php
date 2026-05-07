@@ -3,6 +3,7 @@
 use App\Enums\ApplicationStatus;
 use App\Enums\JobStatus;
 use App\Enums\UserRole;
+use App\Models\Company;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -182,7 +183,7 @@ it('prevents employer from applying to their own job', function () {
     // To test the own-job rule, we need a candidate who also owns a company/job
     // This tests the controller/service layer business rule
     $employer = User::factory()->create(['role' => UserRole::CANDIDATE]);
-    $company = \App\Models\Company::factory()->create(['user_id' => $employer->id]);
+    $company = Company::factory()->create(['user_id' => $employer->id]);
     $job = Job::factory()->approved()->create(['company_id' => $company->id]);
 
     $response = $this->actingAs($employer, 'sanctum')

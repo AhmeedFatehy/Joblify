@@ -15,7 +15,7 @@ class NotificationService
         $statusLabel = ucfirst($application->status->value);
 
         $application->user->notifications()->create([
-            'type'    => 'application_status_changed',
+            'type' => 'application_status_changed',
             'message' => "Your application for \"{$application->job->title}\" has been {$statusLabel}.",
             'is_read' => false,
         ]);
@@ -27,7 +27,7 @@ class NotificationService
     public function send(User $user, string $type, string $message): void
     {
         $user->notifications()->create([
-            'type'    => $type,
+            'type' => $type,
             'message' => $message,
             'is_read' => false,
         ]);

@@ -35,7 +35,7 @@ class NotificationController extends BaseApiController
 
         return $this->success([
             'notifications' => $notifications,
-            'unread_count'  => $unreadCount,
+            'unread_count' => $unreadCount,
         ], 'Notifications retrieved successfully');
     }
 
@@ -93,26 +93,25 @@ class NotificationController extends BaseApiController
         }
     }
 
-
     public function markRead(Notification $notification): JsonResponse
-{
-    if ($notification->user_id !== Auth::id()) {
-        return $this->error('This action is unauthorized', 403);
+    {
+        if ($notification->user_id !== Auth::id()) {
+            return $this->error('This action is unauthorized', 403);
+        }
+
+        $notification->update(['is_read' => true]);
+
+        return $this->success($notification, 'Notification marked as read');
     }
 
-    $notification->update(['is_read' => true]);
+    public function destroy(Notification $notification): JsonResponse
+    {
+        if ($notification->user_id !== Auth::id()) {
+            return $this->error('This action is unauthorized', 403);
+        }
 
-    return $this->success($notification, 'Notification marked as read');
-}
+        $notification->delete();
 
-public function destroy(Notification $notification): JsonResponse
-{
-    if ($notification->user_id !== Auth::id()) {
-        return $this->error('This action is unauthorized', 403);
+        return $this->noContent('Notification deleted');
     }
-
-    $notification->delete();
-
-    return $this->noContent('Notification deleted');
-}
 }

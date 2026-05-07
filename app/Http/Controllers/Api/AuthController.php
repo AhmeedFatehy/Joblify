@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 // use App\Http\Controllers\Controller;
-use App\Http\Controllers\Api\BaseApiController;
-use App\Http\Requests\Api\RegisterRequest;
 use App\Http\Requests\Api\LoginRequest;
+use App\Http\Requests\Api\RegisterRequest;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends BaseApiController
 {
@@ -38,7 +37,7 @@ class AuthController extends BaseApiController
 
     public function login(LoginRequest $request): JsonResponse
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (! Auth::attempt($request->only('email', 'password'))) {
             return $this->unauthorized('Invalid login credentials');
         }
 

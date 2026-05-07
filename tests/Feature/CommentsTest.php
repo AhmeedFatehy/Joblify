@@ -1,18 +1,18 @@
 <?php
 
-use App\Enums\JobStatus;
 use App\Enums\UserRole;
 use App\Models\Comment;
 use App\Models\Job;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 // ── List ──────────────────────────────────────────────────────────────────────
 
 test('anyone authenticated can list comments on a job', function () {
     $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
-    $job  = Job::factory()->approved()->create();
+    $job = Job::factory()->approved()->create();
     Comment::factory(3)->create(['job_id' => $job->id]);
 
     $this->actingAs($user)
@@ -25,7 +25,7 @@ test('anyone authenticated can list comments on a job', function () {
 
 test('authenticated user can post a comment on a job', function () {
     $user = User::factory()->create(['role' => UserRole::EMPLOYER]);
-    $job  = Job::factory()->approved()->create();
+    $job = Job::factory()->approved()->create();
 
     $this->actingAs($user)
         ->postJson("/api/jobs/{$job->id}/comments", ['content' => 'Great opportunity!'])
@@ -33,7 +33,7 @@ test('authenticated user can post a comment on a job', function () {
         ->assertJsonPath('success', true);
 
     $this->assertDatabaseHas('comments', [
-        'job_id'  => $job->id,
+        'job_id' => $job->id,
         'user_id' => $user->id,
         'content' => 'Great opportunity!',
     ]);
@@ -41,7 +41,7 @@ test('authenticated user can post a comment on a job', function () {
 
 test('comment content is required', function () {
     $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
-    $job  = Job::factory()->approved()->create();
+    $job = Job::factory()->approved()->create();
 
     $this->actingAs($user)
         ->postJson("/api/jobs/{$job->id}/comments", [])
@@ -51,7 +51,7 @@ test('comment content is required', function () {
 // ── Update ────────────────────────────────────────────────────────────────────
 
 test('user can update their own comment', function () {
-    $user    = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $comment = Comment::factory()->create(['user_id' => $user->id]);
 
     $this->actingAs($user)
@@ -62,8 +62,8 @@ test('user can update their own comment', function () {
 });
 
 test('user cannot update someone else\'s comment', function () {
-    $user    = User::factory()->create(['role' => UserRole::CANDIDATE]);
-    $other   = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $other = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $comment = Comment::factory()->create(['user_id' => $other->id]);
 
     $this->actingAs($user)
@@ -74,7 +74,7 @@ test('user cannot update someone else\'s comment', function () {
 // ── Delete ────────────────────────────────────────────────────────────────────
 
 test('user can delete their own comment', function () {
-    $user    = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $comment = Comment::factory()->create(['user_id' => $user->id]);
 
     $this->actingAs($user)
@@ -85,8 +85,8 @@ test('user can delete their own comment', function () {
 });
 
 test('user cannot delete someone else\'s comment', function () {
-    $user    = User::factory()->create(['role' => UserRole::CANDIDATE]);
-    $other   = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $other = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $comment = Comment::factory()->create(['user_id' => $other->id]);
 
     $this->actingAs($user)
@@ -95,7 +95,7 @@ test('user cannot delete someone else\'s comment', function () {
 });
 
 test('admin can delete any comment', function () {
-    $admin   = User::factory()->create(['role' => UserRole::ADMIN]);
+    $admin = User::factory()->create(['role' => UserRole::ADMIN]);
     $comment = Comment::factory()->create();
 
     $this->actingAs($admin)

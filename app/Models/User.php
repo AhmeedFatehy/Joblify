@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -52,22 +54,22 @@ class User extends Authenticatable
         ];
     }
 
-    public function company(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function company(): HasOne
     {
         return $this->hasOne(Company::class);
     }
 
-    public function applications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
     }
 
-    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
     }
 
-    public function notifications(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function notifications(): HasMany
     {
         return $this->hasMany(Notification::class);
     }

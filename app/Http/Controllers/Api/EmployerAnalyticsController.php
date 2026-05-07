@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
-use App\Http\Controllers\Api\BaseApiController;
 use App\Models\Application;
+use App\Models\Job;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class EmployerAnalyticsController extends BaseApiController
 {
@@ -24,7 +27,7 @@ class EmployerAnalyticsController extends BaseApiController
         }
 
         $company = $user->company;
-        $jobIds  = $company->jobs()->pluck('id');
+        $jobIds = $company->jobs()->pluck('id');
 
         $totalApplications = Application::whereIn('job_id', $jobIds)->count();
 
@@ -46,16 +49,16 @@ class EmployerAnalyticsController extends BaseApiController
             ->get();
 
         return $this->success([
-            'company'              => $company->only('id', 'name'),
-            'total_jobs'           => $company->jobs()->count(),
-            'total_applications'   => $totalApplications,
+            'company' => $company->only('id', 'name'),
+            'total_jobs' => $company->jobs()->count(),
+            'total_applications' => $totalApplications,
             'applications_by_status' => [
-                'pending'  => $byStatus[ApplicationStatus::PENDING->value] ?? 0,
+                'pending' => $byStatus[ApplicationStatus::PENDING->value] ?? 0,
                 'accepted' => $byStatus[ApplicationStatus::ACCEPTED->value] ?? 0,
                 'rejected' => $byStatus[ApplicationStatus::REJECTED->value] ?? 0,
             ],
-            'top_jobs'             => $topJobs,
-            'recent_applications'  => $recentApplications,
+            'top_jobs' => $topJobs,
+            'recent_applications' => $recentApplications,
         ], 'Analytics retrieved successfully');
     }
 
@@ -63,7 +66,7 @@ class EmployerAnalyticsController extends BaseApiController
      * Applications for a specific job the employer owns.
      * GET /employer/jobs/{job}/applications
      */
-    public function jobApplications(\App\Models\Job $job): JsonResponse
+    public function jobApplications(Job $job): JsonResponse
     {
         $user = Auth::user();
 
@@ -83,7 +86,7 @@ class EmployerAnalyticsController extends BaseApiController
      * Accept or reject an application.
      * PATCH /employer/applications/{application}
      */
-    public function updateApplicationStatus(\Illuminate\Http\Request $request, Application $application): JsonResponse
+    public function updateApplicationStatus(Request $request, Application $application): JsonResponse
     {
         $user = Auth::user();
 
@@ -92,7 +95,7 @@ class EmployerAnalyticsController extends BaseApiController
         }
 
         $request->validate([
-            'status' => ['required', \Illuminate\Validation\Rule::in([
+            'status' => ['required', Rule::in([
                 ApplicationStatus::ACCEPTED->value,
                 ApplicationStatus::REJECTED->value,
             ])],
@@ -101,7 +104,7 @@ class EmployerAnalyticsController extends BaseApiController
         $application->update(['status' => $request->status]);
 
         // Notify the candidate
-        app(\App\Services\NotificationService::class)
+        app(NotificationService::class)
             ->notifyApplicationStatusChanged($application->load('job'));
 
         return $this->success(

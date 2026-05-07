@@ -2,19 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\ExperienceLevel;
+use App\Enums\JobStatus;
+use App\Enums\WorkType;
+use Database\Factories\JobFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Enums\JobStatus;
-use App\Enums\WorkType;
-use App\Enums\ExperienceLevel;
 
 class Job extends Model
 {
-    /** @use HasFactory<\Database\Factories\JobFactory> */
+    /** @use HasFactory<JobFactory> */
     use HasFactory;
+
     protected $table = 'job_listings';
 
     protected $fillable = [

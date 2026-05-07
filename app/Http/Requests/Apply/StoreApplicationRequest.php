@@ -5,7 +5,6 @@ namespace App\Http\Requests\Apply;
 use App\Enums\UserRole;
 use App\Http\Requests\BaseApiRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
 class StoreApplicationRequest extends BaseApiRequest

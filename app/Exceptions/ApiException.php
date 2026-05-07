@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Exception;
+use Illuminate\Http\JsonResponse;
 
 class ApiException extends Exception
 {
@@ -35,7 +36,7 @@ class ApiException extends Exception
     /**
      * Render the exception as an HTTP response.
      */
-    public function render(): \Illuminate\Http\JsonResponse
+    public function render(): JsonResponse
     {
         $response = [
             'success' => false,

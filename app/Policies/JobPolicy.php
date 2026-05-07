@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Job;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class JobPolicy
 {
@@ -37,7 +36,7 @@ class JobPolicy
      */
     public function update(User $user, Job $job): bool
     {
-        //admin can update every job but employer can update his job only
+        // admin can update every job but employer can update his job only
         return $user->id === $job->employer_id || $user->role === UserRole::ADMIN;
     }
 
@@ -46,7 +45,7 @@ class JobPolicy
      */
     public function delete(User $user, Job $job): bool
     {
-        //admin can delete every job but employer can delete his job only
+        // admin can delete every job but employer can delete his job only
         return $user->id === $job->employer_id || $user->role === UserRole::ADMIN;
     }
 

@@ -17,7 +17,7 @@ class CommentFactory extends Factory
     public function definition(): array
     {
         return [
-            'job_id'  => Job::factory(),
+            'job_id' => Job::factory(),
             'user_id' => User::factory(),
             'content' => fake()->paragraph(),
         ];

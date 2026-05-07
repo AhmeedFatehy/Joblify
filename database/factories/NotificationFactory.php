@@ -17,7 +17,7 @@ class NotificationFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'type'    => fake()->randomElement([
+            'type' => fake()->randomElement([
                 'job_approved',
                 'job_rejected',
                 'application_status_changed',

@@ -3,8 +3,9 @@
 use App\Enums\UserRole;
 use App\Models\Notification;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 // ── List ──────────────────────────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ test('user can list their notifications', function () {
 });
 
 test('user only sees their own notifications', function () {
-    $user  = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $other = User::factory()->create(['role' => UserRole::CANDIDATE]);
 
     Notification::factory(2)->create(['user_id' => $user->id]);
@@ -44,7 +45,7 @@ test('user can filter unread notifications', function () {
 // ── Mark Single Read ──────────────────────────────────────────────────────────
 
 test('user can mark a notification as read', function () {
-    $user         = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $notification = Notification::factory()->create(['user_id' => $user->id, 'is_read' => false]);
 
     $this->actingAs($user)
@@ -55,9 +56,9 @@ test('user can mark a notification as read', function () {
 });
 
 test('user cannot mark another user\'s notification as read', function () {
-    $user  = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $other = User::factory()->create(['role' => UserRole::CANDIDATE]);
-    $n     = Notification::factory()->create(['user_id' => $other->id, 'is_read' => false]);
+    $n = Notification::factory()->create(['user_id' => $other->id, 'is_read' => false]);
 
     $this->actingAs($user)
         ->patchJson("/api/notifications/{$n->id}/read")
@@ -82,7 +83,7 @@ test('user can mark all notifications as read', function () {
 // ── Delete ────────────────────────────────────────────────────────────────────
 
 test('user can delete their notification', function () {
-    $user         = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $user = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $notification = Notification::factory()->create(['user_id' => $user->id]);
 
     $this->actingAs($user)

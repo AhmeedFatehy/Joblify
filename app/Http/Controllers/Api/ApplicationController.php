@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Apply\StoreApplicationRequest;
 use App\Models\Application;
 use App\Models\Job;

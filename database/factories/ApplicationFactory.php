@@ -20,7 +20,7 @@ class ApplicationFactory extends Factory
         return [
             'job_id' => Job::factory(),
             'user_id' => User::factory(),
-            'resume' => 'resumes/' . fake()->uuid() . '.pdf',
+            'resume' => 'resumes/'.fake()->uuid().'.pdf',
             'cover_letter' => fake()->optional()->paragraph(),
             'status' => ApplicationStatus::PENDING,
         ];
