@@ -101,4 +101,14 @@ class JobController extends BaseApiController
 
         return $this->success(null, 'Job deleted successfully');
     }
+
+    public function employerJobs(Request $request)
+    {
+        $jobs = Job::where('company_id', $request->user()->company->id)
+            ->with('company', 'categories', 'skills')
+            ->latest()
+            ->get();
+
+        return JobResource::collection($jobs);
+    }
 }
