@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Api\BaseApiController;
 use App\Models\Comment;
 use App\Models\ModerationAction;
+use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -42,6 +43,14 @@ class AdminCommentController extends BaseApiController
             'comment_id' => $comment->id,
             'action' => 'delete',
             'reason' => $request->input('reason'),
+        ]);
+
+        ActivityLog::create([
+            'user_id' => $admin->id,
+            'action' => 'comment.delete',
+            'subject_type' => Comment::class,
+            'subject_id' => $comment->id,
+            'meta' => ['job_id' => $comment->job_id, 'reason' => $request->input('reason')],
         ]);
 
         return $this->noContent('Comment removed by admin');

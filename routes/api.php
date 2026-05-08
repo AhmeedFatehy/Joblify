@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
         Route::get('/dashboard/activity', [AdminDashboardController::class, 'activity']);
+        Route::get('/activity-logs', [\App\Http\Controllers\Api\Admin\ActivityLogController::class, 'index']);
 
         // Job Moderation
         Route::get('/jobs', [AdminJobController::class, 'index']);
@@ -72,6 +73,11 @@ Route::middleware('auth:sanctum')->group(function () {
         // Comment Moderation
         Route::get('/comments', [AdminCommentController::class, 'index']);
         Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy']);
+
+        // Users management
+        Route::get('/users', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'index']);
+        Route::patch('/users/{user}/suspend', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'suspend']);
+        Route::patch('/users/{user}/activate', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'activate']);
     });
 
 });
