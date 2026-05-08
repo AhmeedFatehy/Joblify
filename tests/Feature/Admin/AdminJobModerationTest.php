@@ -47,7 +47,7 @@ test('admin can approve a pending job', function () {
     $job = pendingJob();
 
     $this->actingAs($admin)
-        ->postJson("/api/admin/jobs/{$job->id}/approve")
+        ->patchJson("/api/admin/jobs/{$job->id}/approve")
         ->assertOk()
         ->assertJsonPath('success', true);
 
@@ -59,7 +59,7 @@ test('admin cannot approve an already-approved job', function () {
     $job = Job::factory()->approved()->create();
 
     $this->actingAs($admin)
-        ->postJson("/api/admin/jobs/{$job->id}/approve")
+        ->patchJson("/api/admin/jobs/{$job->id}/approve")
         ->assertUnprocessable();
 });
 
@@ -67,7 +67,7 @@ test('approving a job notifies the employer', function () {
     $admin = adminUser();
     $job = pendingJob();
 
-    $this->actingAs($admin)->postJson("/api/admin/jobs/{$job->id}/approve");
+    $this->actingAs($admin)->patchJson("/api/admin/jobs/{$job->id}/approve");
 
     $this->assertDatabaseHas('notifications', [
         'user_id' => $job->company->user_id,
@@ -82,7 +82,7 @@ test('admin can reject a pending job with a reason', function () {
     $job = pendingJob();
 
     $this->actingAs($admin)
-        ->postJson("/api/admin/jobs/{$job->id}/reject", ['reason' => 'Violates guidelines.'])
+        ->patchJson("/api/admin/jobs/{$job->id}/reject", ['reason' => 'Violates guidelines.'])
         ->assertOk()
         ->assertJsonPath('success', true);
 
@@ -94,7 +94,7 @@ test('rejection requires a reason', function () {
     $job = pendingJob();
 
     $this->actingAs($admin)
-        ->postJson("/api/admin/jobs/{$job->id}/reject", [])
+        ->patchJson("/api/admin/jobs/{$job->id}/reject", [])
         ->assertUnprocessable();
 });
 
@@ -102,7 +102,7 @@ test('rejecting a job notifies the employer', function () {
     $admin = adminUser();
     $job = pendingJob();
 
-    $this->actingAs($admin)->postJson("/api/admin/jobs/{$job->id}/reject", ['reason' => 'Spam.']);
+    $this->actingAs($admin)->patchJson("/api/admin/jobs/{$job->id}/reject", ['reason' => 'Spam.']);
 
     $this->assertDatabaseHas('notifications', [
         'user_id' => $job->company->user_id,
