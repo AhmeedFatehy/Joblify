@@ -32,6 +32,7 @@ class Job extends Model
         'experience_level',
         'deadline',
         'status',
+        'rejection_reason',
     ];
 
     protected function casts(): array

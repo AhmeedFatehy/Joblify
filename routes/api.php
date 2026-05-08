@@ -67,8 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Job Moderation
         Route::get('/jobs', [AdminJobController::class, 'index']);
-        Route::post('/jobs/{job}/approve', [AdminJobController::class, 'approve']);
-        Route::post('/jobs/{job}/reject', [AdminJobController::class, 'reject']);
+        Route::patch('/jobs/{job}/approve', [AdminJobController::class, 'approve']);
+        Route::patch('/jobs/{job}/reject', [AdminJobController::class, 'reject']);
+        // Bulk moderation (optional)
+        Route::post('/jobs/bulk-approve', [AdminJobController::class, 'bulkApprove']);
+        Route::post('/jobs/bulk-reject', [AdminJobController::class, 'bulkReject']);
 
         // Comment Moderation
         Route::get('/comments', [AdminCommentController::class, 'index']);
