@@ -38,6 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/applications', [ApplicationController::class, 'index']);
     Route::get('/applications/{application}', [ApplicationController::class, 'show']);
     Route::delete('/applications/{application}', [ApplicationController::class, 'destroy']);
+    Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus']);
 
     //  Comments
     Route::get('/jobs/{job}/comments', [CommentController::class, 'index']);

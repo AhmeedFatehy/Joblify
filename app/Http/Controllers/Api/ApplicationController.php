@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
 use App\Http\Requests\Apply\StoreApplicationRequest;
+use App\Http\Requests\UpdateApplicationStatusRequest;
 use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
 use App\Models\Job;
@@ -114,9 +115,16 @@ class ApplicationController extends BaseApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Application $application): JsonResponse
+    public function updateStatus(UpdateApplicationStatusRequest $request, Application $application): JsonResponse
     {
-        //
+        $this->authorize('updateStatus', $application);
+
+        $updatedApplication = $this->applicationService->updateStatus($request, $application);
+
+        return $this->success(
+            ApplicationResource::make($updatedApplication->load(['job.company', 'user'])),
+            'Application status updated successfully'
+        );
     }
 
     /**

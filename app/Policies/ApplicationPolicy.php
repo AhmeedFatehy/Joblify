@@ -40,6 +40,11 @@ class ApplicationPolicy
         return $user->id === $application->user_id;
     }
 
+    public function updateStatus(User $user, Application $application): bool
+    {
+        return $user->id === $application->job->company->user_id;
+    }
+
     /**
      * Determine whether the user can delete the model.
      */
