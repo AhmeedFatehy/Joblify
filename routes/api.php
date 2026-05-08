@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\EmployerAnalyticsController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', fn (Request $request) => $request->user());
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    //candidate
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::post('/profile', [ProfileController::class, 'update']); 
+    Route::get('/profile/resume', [ProfileController::class, 'downloadResume']);
 
     //  Jobs
     Route::middleware('role:employer')->group(function () {
