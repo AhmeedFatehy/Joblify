@@ -29,6 +29,7 @@ class ApplicationResource extends JsonResource
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'created_at' => $this->created_at->toDateTimeString(),
+            'rejection_reason' => $this->rejection_reason,
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,

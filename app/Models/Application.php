@@ -20,6 +20,7 @@ class Application extends Model
         'resume',
         'cover_letter',
         'status',
+        'rejection_reason',
     ];
 
     protected function casts(): array

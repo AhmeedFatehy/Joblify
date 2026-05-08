@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatus;
 use App\Enums\JobStatus;
 use App\Exceptions\ApiException;
 use App\Http\Requests\Apply\StoreApplicationRequest;
+use App\Http\Requests\UpdateApplicationStatusRequest;
 use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Contracts\Filesystem\Factory as StorageFactory;
@@ -38,6 +39,26 @@ class ApplicationService
             'cover_letter' => $request->input('cover_letter'),
             'status' => ApplicationStatus::PENDING,
         ]);
+    }
+
+    public function updateStatus(UpdateApplicationStatusRequest $request, Application $application): Application
+    {
+        if (! $application->status->isPending()) {
+            throw new ApiException('Only pending applications can be updated.', 422);
+        }
+        $application->update([
+            'status' => $request->enum('status', ApplicationStatus::class),
+            'rejection_reason' => $request->status === ApplicationStatus::REJECTED->value
+                ? $request->input('rejection_reason')
+                : null,
+        ]);
+        // TODO: Status history audit log (deferred to post-MVP).
+        // Capture $oldStatus before update, then write to application_status_histories
+        // with from_status, to_status, changed_by (Auth::id()), and reason.
+
+        app(NotificationService::class)->notifyApplicationStatusChanged($application->load('job'));
+
+        return $application;
     }
 
     public function getAllQuery()

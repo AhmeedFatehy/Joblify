@@ -14,9 +14,15 @@ class NotificationService
     {
         $statusLabel = ucfirst($application->status->value);
 
+        $message = "Your application for \"{$application->job->title}\" has been {$statusLabel}.";
+
+        if ($application->status->isRejected() && $application->rejection_reason) {
+            $message .= ' Reason: '.$application->rejection_reason;
+        }
+
         $application->user->notifications()->create([
             'type' => 'application_status_changed',
-            'message' => "Your application for \"{$application->job->title}\" has been {$statusLabel}.",
+            'message' => $message,
             'is_read' => false,
         ]);
     }
