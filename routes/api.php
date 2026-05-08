@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\EmployerAnalyticsController;
+use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -14,12 +15,21 @@ use Illuminate\Support\Facades\Route;
 // public
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/jobs', [JobController::class, 'index']);
+Route::get('/jobs/{job}', [JobController::class, 'show']);
 
 // Protected
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', fn (Request $request) => $request->user());
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    //  Jobs
+    Route::middleware('role:employer')->group(function () {
+        Route::post('/jobs', [JobController::class, 'store']);
+        Route::patch('/jobs/{job}', [JobController::class, 'update']);
+        Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
+    });
 
     //  Applications
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store']);
