@@ -9,6 +9,7 @@ use App\Http\Resources\JobResource;
 use App\Models\Job;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class JobController extends BaseApiController
 {
@@ -18,16 +19,21 @@ class JobController extends BaseApiController
     public function index(Request $request)
     {
         try {
-            $query = Job::where('status', JobStatus::APPROVED->value)
+            $query = Job::query()->where('status', JobStatus::APPROVED->value)
                 ->with('company', 'categories', 'skills');
 
-            // Search by keywords in title or description
+
             if ($request->filled('search')) {
                 $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                      ->orWhere('description', 'like', "%{$search}%");
-                });
+
+                $query->selectRaw(
+                        'jobs.*, MATCH(title, description) AGAINST(? IN BOOLEAN MODE) AS relevance',
+                        [$search]
+                    )
+                    ->whereRaw(
+                        'MATCH(title, description) AGAINST(? IN BOOLEAN MODE)',
+                        [$search]
+                    );
             }
 
             // Filter by location
@@ -42,13 +48,50 @@ class JobController extends BaseApiController
                 });
             }
 
+            // Filter by experience level
+            if ($request->filled('experience_level')) {
+                $query->where('experience_level', $request->experience_level);
+            }
+
+            // Filter by salary range
+            $salaryMin = $request->query('salary_min');
+            $salaryMax = $request->query('salary_max');
+
+            if ($salaryMin !== null || $salaryMax !== null) {
+                $query->where(function ($q) use ($salaryMin, $salaryMax) {
+                    if ($salaryMin !== null && $salaryMax !== null) {
+                        $q->where('salary_min', '<=', $salaryMax)
+                          ->where('salary_max', '>=', $salaryMin);
+                    } elseif ($salaryMin !== null) {
+                        $q->where('salary_max', '>=', $salaryMin);
+                    } else {
+                        $q->where('salary_min', '<=', $salaryMax);
+                    }
+                });
+            }
+
+            // Filter by post date
+            if ($request->filled('posted_within')) {
+                $range = $request->posted_within;
+                $date = match ($range) {
+                    '24h' => now()->subDay(),
+                    'week' => now()->subWeek(),
+                    'month' => now()->subMonth(),
+                    default => null,
+                };
+
+                if ($date) {
+                    $query->where('created_at', '>=', $date);
+                }
+            }
+
             // Sort: relevance (default, by created_at) or date
             $sort = $request->get('sort', 'relevance');
-            if ($sort === 'date') {
+            if ($sort === 'date' || ! $request->filled('search')) {
                 $query->orderBy('created_at', 'desc');
             } else {
-                // Relevance: prioritize by created_at for simplicity; enhance with full-text if needed
-                $query->orderBy('created_at', 'desc');
+                $query->orderByDesc('relevance')
+                      ->orderBy('created_at', 'desc');
             }
 
             // Pagination: 10-20 per page, default 10
