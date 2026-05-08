@@ -56,7 +56,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:employer')->group(function () {
         Route::get('/employer/analytics', [EmployerAnalyticsController::class, 'index']);
         Route::get('/employer/jobs/{job}/applications', [EmployerAnalyticsController::class, 'jobApplications']);
-        Route::patch('/employer/applications/{application}', [EmployerAnalyticsController::class, 'updateApplicationStatus']);
     });
 
     //  Admin

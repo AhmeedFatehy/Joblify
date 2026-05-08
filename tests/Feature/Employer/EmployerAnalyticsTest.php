@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ApplicationStatus;
 use App\Enums\UserRole;
 use App\Models\Application;
 use App\Models\Company;
@@ -66,60 +65,4 @@ test('employer cannot view applications for another employer\'s job', function (
     $this->actingAs($employer)
         ->getJson("/api/employer/jobs/{$job->id}/applications")
         ->assertForbidden();
-});
-
-// ── Update Application Status ─────────────────────────────────────────────────
-
-test('employer can accept an application for their job', function () {
-    $employer = employerWithCompany();
-    $job = Job::factory()->create(['company_id' => $employer->company->id]);
-    $application = Application::factory()->create(['job_id' => $job->id]);
-
-    $this->actingAs($employer)
-        ->patchJson("/api/employer/applications/{$application->id}", [
-            'status' => ApplicationStatus::ACCEPTED->value,
-        ])
-        ->assertOk();
-
-    expect($application->fresh()->status)->toBe(ApplicationStatus::ACCEPTED);
-});
-
-test('accepting application sends notification to candidate', function () {
-    $employer = employerWithCompany();
-    $job = Job::factory()->create(['company_id' => $employer->company->id]);
-    $application = Application::factory()->create(['job_id' => $job->id]);
-
-    $this->actingAs($employer)->patchJson("/api/employer/applications/{$application->id}", [
-        'status' => ApplicationStatus::ACCEPTED->value,
-    ]);
-
-    $this->assertDatabaseHas('notifications', [
-        'user_id' => $application->user_id,
-        'type' => 'application_status_changed',
-    ]);
-});
-
-test('employer cannot update application for another employer\'s job', function () {
-    $employer1 = employerWithCompany();
-    $employer2 = employerWithCompany();
-    $job = Job::factory()->create(['company_id' => $employer2->company->id]);
-    $application = Application::factory()->create(['job_id' => $job->id]);
-
-    $this->actingAs($employer1)
-        ->patchJson("/api/employer/applications/{$application->id}", [
-            'status' => ApplicationStatus::ACCEPTED->value,
-        ])
-        ->assertForbidden();
-});
-
-test('status must be accepted or rejected', function () {
-    $employer = employerWithCompany();
-    $job = Job::factory()->create(['company_id' => $employer->company->id]);
-    $application = Application::factory()->create(['job_id' => $job->id]);
-
-    $this->actingAs($employer)
-        ->patchJson("/api/employer/applications/{$application->id}", [
-            'status' => 'pending', // not allowed via this endpoint
-        ])
-        ->assertUnprocessable();
 });
