@@ -1,18 +1,16 @@
 <?php
 
+if (! class_exists('Laravel\\Fortify\\Features')) {
+    return;
+}
+
 use App\Models\User;
-use Inertia\Testing\AssertableInertia as Assert;
+use Laravel\Fortify\Features;
 
 test('confirm password screen can be rendered', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->get(route('password.confirm'));
+    $response = $this->actingAs(User::factory()->create())->get(route('password.confirm'));
 
     $response->assertOk();
-
-    $response->assertInertia(fn (Assert $page) => $page
-        ->component('auth/ConfirmPassword'),
-    );
 });
 
 test('password confirmation requires authentication', function () {

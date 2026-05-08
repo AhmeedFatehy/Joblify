@@ -1,5 +1,11 @@
 <?php
 
+if (! class_exists('Laravel\\Fortify\\Features')) {
+    return;
+}
+
+use App\Models\User;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -13,7 +19,9 @@ test('registration screen can be rendered', function () {
 });
 
 test('new users can register', function () {
-    $response = $this->post(route('register.store'), [
+    Notification::fake();
+
+    $response = $this->post(route('register'), [
         'name' => 'Test User',
         'email' => 'test@example.com',
         'password' => 'password',

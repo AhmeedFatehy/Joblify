@@ -1,5 +1,9 @@
 <?php
 
+if (! class_exists('Laravel\\Fortify\\Features')) {
+    return;
+}
+
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;

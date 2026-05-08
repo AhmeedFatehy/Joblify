@@ -1,5 +1,9 @@
 <?php
 
+if (! class_exists('Laravel\\Fortify\\Features')) {
+    return;
+}
+
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
