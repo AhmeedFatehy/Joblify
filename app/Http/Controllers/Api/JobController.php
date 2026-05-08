@@ -15,10 +15,46 @@ class JobController extends BaseApiController
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $jobs = Job::with('company', 'categories', 'skills')->get();
+            $query = Job::where('status', JobStatus::APPROVED->value)
+                ->with('company', 'categories', 'skills');
+
+            // Search by keywords in title or description
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+
+            // Filter by location
+            if ($request->filled('location')) {
+                $query->where('location', 'like', "%{$request->location}%");
+            }
+
+            // Filter by category
+            if ($request->filled('category_id')) {
+                $query->whereHas('categories', function ($q) use ($request) {
+                    $q->where('id', $request->category_id);
+                });
+            }
+
+            // Sort: relevance (default, by created_at) or date
+            $sort = $request->get('sort', 'relevance');
+            if ($sort === 'date') {
+                $query->orderBy('created_at', 'desc');
+            } else {
+                // Relevance: prioritize by created_at for simplicity; enhance with full-text if needed
+                $query->orderBy('created_at', 'desc');
+            }
+
+            // Pagination: 10-20 per page, default 10
+            $perPage = $request->get('per_page', 10);
+            $perPage = min(max($perPage, 10), 20); // Clamp to 10-20
+            $jobs = $query->paginate($perPage)->withQueryString();;
 
             return $this->success(JobResource::collection($jobs), 'Jobs retrieved successfully');
         } catch (Exception $e) {
