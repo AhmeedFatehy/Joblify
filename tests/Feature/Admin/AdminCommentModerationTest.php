@@ -26,7 +26,20 @@ test('admin can remove any comment', function () {
         ->deleteJson("/api/admin/comments/{$comment->id}")
         ->assertNoContent();
 
-    $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+    $this->assertSoftDeleted('comments', ['id' => $comment->id]);
+
+    // ModerationAction should be recorded
+    $this->assertDatabaseHas('moderation_actions', [
+        'comment_id' => $comment->id,
+        'action' => 'delete',
+    ]);
+
+    // Activity log should record the admin deletion
+    $this->assertDatabaseHas('activity_logs', [
+        'action' => 'comment.delete',
+        'subject_type' => Comment::class,
+        'subject_id' => $comment->id,
+    ]);
 });
 
 test('non-admin cannot access admin comment moderation', function () {
