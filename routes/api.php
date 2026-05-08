@@ -1,11 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ActivityLogController;
 use App\Http\Controllers\Api\Admin\AdminCommentController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminJobController;
+use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\EmployerAnalyticsController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
@@ -25,9 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', fn (Request $request) => $request->user());
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    //candidate
+    // candidate
     Route::get('/profile', [ProfileController::class, 'show']);
-    Route::post('/profile', [ProfileController::class, 'update']); 
+    Route::post('/profile', [ProfileController::class, 'update']);
     Route::get('/profile/resume', [ProfileController::class, 'downloadResume']);
 
     //  Jobs
@@ -64,12 +67,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employer/jobs/{job}/applications', [EmployerAnalyticsController::class, 'jobApplications']);
     });
 
+    // Company
+    Route::middleware('role:employer')->group(function () {
+        Route::get('/company', [CompanyController::class, 'show']);
+        Route::post('/company', [CompanyController::class, 'store']);
+    });
+
     //  Admin
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
         Route::get('/dashboard/activity', [AdminDashboardController::class, 'activity']);
-        Route::get('/activity-logs', [\App\Http\Controllers\Api\Admin\ActivityLogController::class, 'index']);
+        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
         // Job Moderation
         Route::get('/jobs', [AdminJobController::class, 'index']);
@@ -84,9 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy']);
 
         // Users management
-        Route::get('/users', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'index']);
-        Route::patch('/users/{user}/suspend', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'suspend']);
-        Route::patch('/users/{user}/activate', [\App\Http\Controllers\Api\Admin\AdminUserController::class, 'activate']);
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::patch('/users/{user}/suspend', [AdminUserController::class, 'suspend']);
+        Route::patch('/users/{user}/activate', [AdminUserController::class, 'activate']);
     });
 
 });

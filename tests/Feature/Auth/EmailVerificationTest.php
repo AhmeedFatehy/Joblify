@@ -1,7 +1,7 @@
 <?php
 
 if (! class_exists('Laravel\\Fortify\\Features')) {
-     return;
+    return;
 }
 
 use App\Models\User;
