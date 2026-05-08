@@ -5,7 +5,6 @@ if (! class_exists('Laravel\\Fortify\\Features')) {
 }
 
 use App\Models\User;
-use Laravel\Fortify\Features;
 
 test('confirm password screen can be rendered', function () {
     $response = $this->actingAs(User::factory()->create())->get(route('password.confirm'));

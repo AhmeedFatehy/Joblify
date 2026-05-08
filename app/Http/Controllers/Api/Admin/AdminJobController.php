@@ -41,6 +41,12 @@ class AdminJobController extends BaseApiController
 
         $job->update(['status' => JobStatus::APPROVED]);
 
+        // Clear any previous rejection reason when approving
+        if (isset($job->rejection_reason)) {
+            $job->rejection_reason = null;
+            $job->save();
+        }
+
         // Notify the employer
         $job->company->user->notifications()->create([
             'type' => 'job_approved',
@@ -71,7 +77,7 @@ class AdminJobController extends BaseApiController
             );
         }
 
-        $job->update(['status' => JobStatus::REJECTED]);
+        $job->update(['status' => JobStatus::REJECTED, 'rejection_reason' => $request->reason]);
 
         // Notify the employer with the rejection reason
         $job->company->user->notifications()->create([
@@ -84,5 +90,61 @@ class AdminJobController extends BaseApiController
             $job->fresh(['company']),
             'Job rejected successfully'
         );
+    }
+
+    /**
+     * Bulk approve jobs by ids.
+     * POST /admin/jobs/bulk-approve
+     */
+    public function bulkApprove(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:jobs,id'],
+        ]);
+
+        $ids = $request->input('ids');
+
+        $jobs = Job::whereIn('id', $ids)->where('status', JobStatus::PENDING)->get();
+
+        foreach ($jobs as $job) {
+            $job->update(['status' => JobStatus::APPROVED, 'rejection_reason' => null]);
+            $job->company->user->notifications()->create([
+                'type' => 'job_approved',
+                'message' => "Your job posting \"{$job->title}\" has been approved and is now live.",
+                'is_read' => false,
+            ]);
+        }
+
+        return $this->success(['count' => $jobs->count()], 'Bulk approve completed');
+    }
+
+    /**
+     * Bulk reject jobs by ids with a reason.
+     * POST /admin/jobs/bulk-reject
+     */
+    public function bulkReject(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:jobs,id'],
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $ids = $request->input('ids');
+        $reason = $request->input('reason');
+
+        $jobs = Job::whereIn('id', $ids)->where('status', JobStatus::PENDING)->get();
+
+        foreach ($jobs as $job) {
+            $job->update(['status' => JobStatus::REJECTED, 'rejection_reason' => $reason]);
+            $job->company->user->notifications()->create([
+                'type' => 'job_rejected',
+                'message' => "Your job posting \"{$job->title}\" was rejected. Reason: {$reason}",
+                'is_read' => false,
+            ]);
+        }
+
+        return $this->success(['count' => $jobs->count()], 'Bulk reject completed');
     }
 }

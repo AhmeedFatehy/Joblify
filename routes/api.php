@@ -1,15 +1,19 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\ActivityLogController;
 use App\Http\Controllers\Api\Admin\AdminCommentController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminJobController;
+use App\Http\Controllers\Api\Admin\AdminUserController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CommentController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\EmployerAnalyticsController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SkillController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +32,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', fn (Request $request) => $request->user());
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    // candidate
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::post('/profile', [ProfileController::class, 'update']);
+    Route::get('/profile/resume', [ProfileController::class, 'downloadResume']);
 
     //  Jobs
     Route::post('/jobs', [JobController::class, 'store']);
@@ -61,16 +70,26 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employer/jobs/{job}/applications', [EmployerAnalyticsController::class, 'jobApplications']);
     });
 
+    // Company
+    Route::middleware('role:employer')->group(function () {
+        Route::get('/company', [CompanyController::class, 'show']);
+        Route::post('/company', [CompanyController::class, 'store']);
+    });
+
     //  Admin
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index']);
         Route::get('/dashboard/activity', [AdminDashboardController::class, 'activity']);
+        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
 
         // Job Moderation
         Route::get('/jobs', [AdminJobController::class, 'index']);
-        Route::post('/jobs/{job}/approve', [AdminJobController::class, 'approve']);
-        Route::post('/jobs/{job}/reject', [AdminJobController::class, 'reject']);
+        Route::patch('/jobs/{job}/approve', [AdminJobController::class, 'approve']);
+        Route::patch('/jobs/{job}/reject', [AdminJobController::class, 'reject']);
+        // Bulk moderation (optional)
+        Route::post('/jobs/bulk-approve', [AdminJobController::class, 'bulkApprove']);
+        Route::post('/jobs/bulk-reject', [AdminJobController::class, 'bulkReject']);
 
         // Comment Moderation
         Route::get('/comments', [AdminCommentController::class, 'index']);
@@ -86,6 +105,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('/skills/{skill}', [SkillController::class, 'update']);
         Route::delete('/skills/{skill}', [SkillController::class, 'destroy']);
 
+        // Users management
+        Route::get('/users', [AdminUserController::class, 'index']);
+        Route::patch('/users/{user}/suspend', [AdminUserController::class, 'suspend']);
+        Route::patch('/users/{user}/activate', [AdminUserController::class, 'activate']);
     });
 
 });
