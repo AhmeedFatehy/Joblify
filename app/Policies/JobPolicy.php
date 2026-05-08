@@ -28,7 +28,7 @@ class JobPolicy
      */
     public function create(User $user): bool
     {
-        return $user->role->value === 'employer';
+        return $user->role->isEmployer();
     }
 
     /**
@@ -37,7 +37,8 @@ class JobPolicy
     public function update(User $user, Job $job): bool
     {
         // admin can update every job but employer can update his job only
-        return $user->id === $job->employer_id || $user->role === UserRole::ADMIN;
+        return $user->role->isAdmin() ||
+            ($user->role->isEmployer() && $user->company?->id === $job->company_id);
     }
 
     /**
@@ -46,7 +47,8 @@ class JobPolicy
     public function delete(User $user, Job $job): bool
     {
         // admin can delete every job but employer can delete his job only
-        return $user->id === $job->employer_id || $user->role === UserRole::ADMIN;
+        return $user->role->isAdmin() ||
+                ($user->role->isEmployer() && $user->company?->id === $job->company_id);
     }
 
     /**
@@ -54,7 +56,7 @@ class JobPolicy
      */
     public function restore(User $user, Job $job): bool
     {
-        return false;
+        return $user->role->isAdmin();
     }
 
     /**
