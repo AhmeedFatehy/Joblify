@@ -421,3 +421,18 @@ it('rejects unauthenticated delete requests', function () {
     $response->assertUnauthorized()
         ->assertJsonPath('success', false);
 });
+
+// ─────────────────────────────────────────────────────────────
+// Candidate Tracking — Status Visibility
+// ─────────────────────────────────────────────────────────────
+
+it('candidate can see updated status on their application', function () {
+    $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
+    $application = Application::factory()->accepted()->create(['user_id' => $candidate->id]);
+
+    $this->actingAs($candidate, 'sanctum')
+        ->getJson("/api/applications/{$application->id}")
+        ->assertOk()
+        ->assertJsonPath('data.status', ApplicationStatus::ACCEPTED->value)
+        ->assertJsonPath('data.status_label', ApplicationStatus::ACCEPTED->label());
+});

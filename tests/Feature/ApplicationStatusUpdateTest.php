@@ -79,6 +79,21 @@ test('employer can reject an application without a reason', function () {
 
 // ── Authorization ────────────────────────────────────────────────────────────
 
+test('unauthenticated user cannot update application status', function () {
+    $application = Application::factory()->create();
+    $this->patchJson("/api/applications/{$application->id}/status", [
+        'status' => ApplicationStatus::ACCEPTED->value,
+    ])->assertUnauthorized();
+});
+
+test('admin can update any application status via gate bypass', function () {
+    $admin = User::factory()->create(['role' => UserRole::ADMIN]);
+    $application = Application::factory()->create();
+    $this->actingAs($admin)->patchJson("/api/applications/{$application->id}/status", [
+        'status' => ApplicationStatus::ACCEPTED->value,
+    ])->assertOk();
+});
+
 test('candidate cannot update application status', function () {
     $candidate = User::factory()->create(['role' => UserRole::CANDIDATE]);
     $application = Application::factory()->create(['user_id' => $candidate->id]);
@@ -91,8 +106,8 @@ test('candidate cannot update application status', function () {
 });
 
 test('employer cannot update application for another employers job', function () {
-    $employer1 = employerWithCompany();
-    $employer2 = employerWithCompany();
+    $employer1 = statusUpdateEmployerWithCompany();
+    $employer2 = statusUpdateEmployerWithCompany();
     $job = Job::factory()->create(['company_id' => $employer2->company->id]);
     $application = Application::factory()->create(['job_id' => $job->id]);
 
