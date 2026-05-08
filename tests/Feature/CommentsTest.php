@@ -81,7 +81,7 @@ test('user can delete their own comment', function () {
         ->deleteJson("/api/comments/{$comment->id}")
         ->assertNoContent();
 
-    $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+    $this->assertSoftDeleted('comments', ['id' => $comment->id]);
 });
 
 test('user cannot delete someone else\'s comment', function () {
@@ -102,5 +102,5 @@ test('admin can delete any comment', function () {
         ->deleteJson("/api/comments/{$comment->id}")
         ->assertNoContent();
 
-    $this->assertDatabaseMissing('comments', ['id' => $comment->id]);
+    $this->assertSoftDeleted('comments', ['id' => $comment->id]);
 });
