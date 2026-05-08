@@ -5,10 +5,12 @@ use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminJobController;
 use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CommentController;
 use App\Http\Controllers\Api\EmployerAnalyticsController;
 use App\Http\Controllers\Api\JobController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\SkillController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +19,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/jobs', [JobController::class, 'index']);
 Route::get('/jobs/{job}', [JobController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/skills', [SkillController::class, 'index']);
+Route::get('/skills/suggest', [SkillController::class, 'suggest']);
 
 // Protected
 Route::middleware('auth:sanctum')->group(function () {
@@ -25,12 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     //  Jobs
-    Route::middleware('role:employer')->group(function () {
-        Route::post('/jobs', [JobController::class, 'store']);
-        Route::patch('/jobs/{job}', [JobController::class, 'update']);
-        Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
-        Route::get('employer/jobs', [JobController::class, 'employerJobs']);
-    });
+    Route::post('/jobs', [JobController::class, 'store']);
+    Route::patch('/jobs/{job}', [JobController::class, 'update']);
+    Route::delete('/jobs/{job}', [JobController::class, 'destroy']);
+    Route::get('employer/jobs', [JobController::class, 'employerJobs']);
 
     //  Applications
     Route::post('/jobs/{job}/apply', [ApplicationController::class, 'store']);
@@ -72,6 +75,17 @@ Route::middleware('auth:sanctum')->group(function () {
         // Comment Moderation
         Route::get('/comments', [AdminCommentController::class, 'index']);
         Route::delete('/comments/{comment}', [AdminCommentController::class, 'destroy']);
+
+         // Categories
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::patch('/categories/{category}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+        // Skills
+        Route::post('/skills', [SkillController::class, 'store']);
+        Route::patch('/skills/{skill}', [SkillController::class, 'update']);
+        Route::delete('/skills/{skill}', [SkillController::class, 'destroy']);
+
     });
 
 });

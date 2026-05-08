@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateJobRequest;
 use App\Http\Resources\JobResource;
 use App\Models\Job;
 use Exception;
+use Illuminate\Http\Request;
 
 class JobController extends BaseApiController
 {
