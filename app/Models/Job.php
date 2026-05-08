@@ -43,6 +43,7 @@ class Job extends Model
             'work_type' => WorkType::class,
             'experience_level' => ExperienceLevel::class,
             'status' => JobStatus::class,
+            'views' => 'integer',
         ];
     }
 

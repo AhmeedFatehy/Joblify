@@ -58,6 +58,14 @@ class JobController extends BaseApiController
     public function show(Job $job)
     {
         try {
+            // Increment total views counter for analytics (simple total views).
+            try {
+                $job->increment('views');
+                $job->refresh();
+            } catch (Exception $e) {
+                // swallow increment errors to avoid breaking read endpoint
+            }
+
             $job->load('company', 'categories', 'skills');
 
             return $this->success(JobResource::make($job), 'Job retrieved successfully');

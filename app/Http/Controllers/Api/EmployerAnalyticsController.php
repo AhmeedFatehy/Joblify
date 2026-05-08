@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Models\Application;
 use App\Models\Job;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EmployerAnalyticsController extends BaseApiController
@@ -15,7 +16,7 @@ class EmployerAnalyticsController extends BaseApiController
      * Analytics overview for the authenticated employer.
      * GET /employer/analytics
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $user = Auth::user();
 
@@ -26,20 +27,48 @@ class EmployerAnalyticsController extends BaseApiController
         $company = $user->company;
         $jobIds = $company->jobs()->pluck('id');
 
-        $totalApplications = Application::whereIn('job_id', $jobIds)->count();
+        // Date range filtering for applications
+        $from = $request->query('from');
+        $to = $request->query('to');
 
-        $byStatus = Application::whereIn('job_id', $jobIds)
+        $applicationsQuery = Application::whereIn('job_id', $jobIds);
+        if ($from) {
+            $applicationsQuery->where('created_at', '>=', $from);
+        }
+        if ($to) {
+            $applicationsQuery->where('created_at', '<=', $to);
+        }
+
+        $totalApplications = $applicationsQuery->count();
+
+        $byStatusQuery = Application::whereIn('job_id', $jobIds);
+        if ($from) {
+            $byStatusQuery->where('created_at', '>=', $from);
+        }
+        if ($to) {
+            $byStatusQuery->where('created_at', '<=', $to);
+        }
+
+        $byStatus = $byStatusQuery
             ->selectRaw('status, count(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
+        // Top jobs include views and application counts; conversion rate = applications/views (if views > 0)
         $topJobs = $company->jobs()
-            ->withCount('applications')
+            ->withCount(['applications' => function ($q) use ($from, $to) {
+                if ($from) {
+                    $q->where('created_at', '>=', $from);
+                }
+                if ($to) {
+                    $q->where('created_at', '<=', $to);
+                }
+            }])
             ->orderByDesc('applications_count')
             ->take(5)
-            ->get(['id', 'title', 'status', 'applications_count']);
+            ->get(['id', 'title', 'status', 'views']);
 
-        $recentApplications = Application::whereIn('job_id', $jobIds)
+        $recentApplications = $applicationsQuery
             ->with(['user:id,name,email', 'job:id,title'])
             ->latest()
             ->take(10)
@@ -54,7 +83,20 @@ class EmployerAnalyticsController extends BaseApiController
                 'accepted' => $byStatus[ApplicationStatus::ACCEPTED->value] ?? 0,
                 'rejected' => $byStatus[ApplicationStatus::REJECTED->value] ?? 0,
             ],
-            'top_jobs' => $topJobs,
+            'top_jobs' => $topJobs->map(function ($job) {
+                $apps = $job->applications_count ?? 0;
+                $views = $job->views ?? 0;
+                $conversion = ($views > 0) ? round($apps / $views, 4) : 0;
+
+                return [
+                    'id' => $job->id,
+                    'title' => $job->title,
+                    'status' => $job->status,
+                    'applications_count' => $apps,
+                    'views' => $views,
+                    'conversion_rate' => $conversion,
+                ];
+            }),
             'recent_applications' => $recentApplications,
         ], 'Analytics retrieved successfully');
     }
@@ -71,10 +113,19 @@ class EmployerAnalyticsController extends BaseApiController
             return $this->forbidden('You do not own this job posting.');
         }
 
-        $applications = $job->applications()
-            ->with('user:id,name,email,phone,linkedin_url')
-            ->latest()
-            ->paginate(15);
+        $applicationsQuery = $job->applications()->with('user:id,name,email,phone,linkedin_url');
+
+        // Support optional date filtering
+        $from = request()->query('from');
+        $to = request()->query('to');
+        if ($from) {
+            $applicationsQuery->where('created_at', '>=', $from);
+        }
+        if ($to) {
+            $applicationsQuery->where('created_at', '<=', $to);
+        }
+
+        $applications = $applicationsQuery->latest()->paginate(15);
 
         return $this->paginated($applications, 'Applications retrieved successfully');
     }
