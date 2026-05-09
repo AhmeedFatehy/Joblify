@@ -15,7 +15,7 @@ class StoreJobRequest extends BaseApiRequest
 
     private static function EXPERIENCE_LEVELS(): string
     {
-        implode(',', ExperienceLevel::values());
+        return implode(',', ExperienceLevel::values());
     }
 
     /**
@@ -62,9 +62,9 @@ class StoreJobRequest extends BaseApiRequest
             'salary_max.numeric' => 'Please enter a valid maximum salary.',
             'location.required' => 'Please enter a job location.',
             'work_type.required' => 'Please select a work type.',
-            'work_type.in' => 'The work type must be one of: '.self::WORK_TYPES,
+            'work_type.in' => 'The work type must be one of: '.self::WORK_TYPES(),
             'experience_level.required' => 'Please select an experience level.',
-            'experience_level.in' => 'The experience level must be one of: '.self::EXPERIENCE_LEVELS,
+            'experience_level.in' => 'The experience level must be one of: '.self::EXPERIENCE_LEVELS(),
             'deadline.date' => 'The deadline must be a valid date.',
             'deadline.after_or_equal' => 'The deadline must be a date after or equal to today.',
             'categories.*.exists' => 'The selected category is invalid.',

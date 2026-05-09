@@ -15,11 +15,11 @@ class CompanyResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this.id,
+            'id' => $this->id,
             'user' => CompanyUserResource::make($this->user),
-            'name' => $this.name,
-            'logo' => $this.logo,
-            'description' => $this.description,
+            'name' => $this->name,
+            'logo' => $this->logo,
+            'description' => $this->description,
         ];
     }
 }
