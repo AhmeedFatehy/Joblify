@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('job_skill', function (Blueprint $table) {
-            $table->foreignId('job_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('job_id')->constrained('job_listings')->cascadeOnDelete();
             $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
 
             $table->primary(['job_id', 'skill_id']);

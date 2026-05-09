@@ -27,7 +27,7 @@ class JobController extends BaseApiController
                 $search = $request->search;
 
                 $query->selectRaw(
-                        'jobs.*, MATCH(title, description) AGAINST(? IN BOOLEAN MODE) AS relevance',
+                        'job_listings.*, MATCH(title, description) AGAINST(? IN BOOLEAN MODE) AS relevance',
                         [$search]
                     )
                     ->whereRaw(
@@ -99,7 +99,7 @@ class JobController extends BaseApiController
             $perPage = min(max($perPage, 10), 20); // Clamp to 10-20
             $jobs = $query->paginate($perPage)->withQueryString();;
 
-            return $this->success(JobResource::collection($jobs), 'Jobs retrieved successfully');
+            return $this->paginated($jobs, 'Jobs retrieved successfully');
         } catch (Exception $e) {
             return $this->error($e->getMessage(), 500);
         }
@@ -110,8 +110,9 @@ class JobController extends BaseApiController
      */
     public function store(StoreJobRequest $request)
     {
+        $this->authorize('create', Job::class);
+
         try {
-            $this->authorize('create', Job::class);
             $validatedData = $request->validated();
             $validatedData['company_id'] = $request->user()->company->id;
             $validatedData['status'] = JobStatus::PENDING->value;
@@ -159,8 +160,9 @@ class JobController extends BaseApiController
      */
     public function update(UpdateJobRequest $request, Job $job)
     {
+        $this->authorize('update', $job);
+
         try {
-            $this->authorize('update', $job);
             $validatedData = $request->validated();
             $job->update($validatedData);
 
@@ -185,9 +187,13 @@ class JobController extends BaseApiController
     public function destroy(Job $job)
     {
         $this->authorize('delete', $job);
-        $job->delete();
 
-        return $this->success(null, 'Job deleted successfully');
+        try {
+            $job->delete();
+            return $this->success(null, 'Job deleted successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
     }
 
     public function employerJobs(Request $request)

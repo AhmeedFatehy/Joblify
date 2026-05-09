@@ -16,12 +16,12 @@ class UpdateJobRequest extends BaseApiRequest
 
     private static function EXPERIENCE_LEVELS(): string
     {
-        implode(',', ExperienceLevel::values());
+        return implode(',', ExperienceLevel::values());
     }
 
     private static function JOB_STATUS(): string
     {
-        implode(',', JobStatus::values());
+        return implode(',', JobStatus::values());
     }
 
     /**
@@ -64,13 +64,13 @@ class UpdateJobRequest extends BaseApiRequest
             'title.max' => 'Please enter a valid job title. Max length is 255 characters.',
             'salary_min.numeric' => 'Please enter a valid minimum salary.',
             'salary_max.numeric' => 'Please enter a valid maximum salary.',
-            'work_type.in' => 'The work type must be one of: '.self::WORK_TYPES,
-            'experience_level.in' => 'The experience level must be one of: '.self::EXPERIENCE_LEVELS,
+            'work_type.in' => 'The work type must be one of: '.self::WORK_TYPES(),
+            'experience_level.in' => 'The experience level must be one of: '.self::EXPERIENCE_LEVELS(),
             'deadline.date' => 'The deadline must be a valid date.',
             'deadline.after_or_equal' => 'The deadline must be a date after or equal to today.',
             'categories.*.exists' => 'The selected category is invalid.',
             'skills.*.exists' => 'The selected skill is invalid.',
-            'status.in' => 'The job status must be one of: '.self::JOB_STATUS,
+            'status.in' => 'The job status must be one of: '.self::JOB_STATUS(),
         ];
     }
 

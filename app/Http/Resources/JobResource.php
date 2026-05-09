@@ -26,6 +26,8 @@ class JobResource extends JsonResource
             'work_type' => $this->work_type,
             'experience_level' => $this->experience_level,
             'deadline' => $this->deadline,
+            'status' => $this->status->value,
+            'status_label' => $this->status->label(),
             'categories' => CategoryResource::collection($this->categories),
             'skills' => SkillResource::collection($this->skills),
             'company_id' => $this->company_id,
