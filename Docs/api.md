@@ -7,19 +7,20 @@ Base URL: `https://your-domain.com/api`
 ## Table of Contents
 
 1. [Authentication](#1-authentication)
-2. [Email Verification](#2-email-verification)
-3. [Password Reset](#3-password-reset)
-4. [Profile](#4-profile)
-5. [Jobs](#5-jobs)
-6. [Applications](#6-applications)
-7. [Comments](#7-comments)
-8. [Categories & Skills](#8-categories--skills)
-9. [Notifications](#9-notifications)
-10. [Company](#10-company)
-11. [Employer Analytics](#11-employer-analytics)
-12. [Admin](#12-admin)
-13. [Enums Reference](#13-enums-reference)
-14. [Standard Response Format](#14-standard-response-format)
+2. [Social Authentication](#2-social-authentication)
+3. [Email Verification](#3-email-verification)
+4. [Password Reset](#4-password-reset)
+5. [Profile](#5-profile)
+6. [Jobs](#6-jobs)
+7. [Applications](#7-applications)
+8. [Comments](#8-comments)
+9. [Categories & Skills](#9-categories--skills)
+10. [Notifications](#10-notifications)
+11. [Company](#11-company)
+12. [Employer Analytics](#12-employer-analytics)
+13. [Admin](#13-admin)
+14. [Enums Reference](#14-enums-reference)
+15. [Standard Response Format](#15-standard-response-format)
 
 ---
 
@@ -125,7 +126,87 @@ Get the authenticated user's basic info. Requires auth.
 {
   "id": 1,
   "name": "John Doe",
-  "email": "john@example.com"
+  "email": "john@example.com",
+  "role": "candidate",
+  "phone": "+201234567890",
+  "linkedin_url": "https://linkedin.com/in/johndoe",
+  "email_verified_at": "2026-05-09T12:00:00.000000Z",
+  "created_at": "2026-05-09T12:00:00.000000Z",
+  "updated_at": "2026-05-09T12:00:00.000000Z"
+}
+```
+
+---
+
+## Social Authentication
+
+### `GET /auth/google/redirect`
+
+Initiate Google OAuth login. **Public.**
+
+**Query parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `role` | string | Optional. `candidate` (default) or `employer` |
+
+**Response:** Redirects to Google consent screen.
+
+### `GET /auth/google/callback`
+
+Google OAuth callback. **Public.**
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "message": "Login successful via Google",
+  "data": {
+    "user": { "id": 1, "name": "John Doe", "email": "john@example.com", "role": "candidate" },
+    "access_token": "1|abc123..."
+  }
+}
+```
+
+**Response `401`:**
+```json
+{
+  "success": false,
+  "message": "Google authentication failed"
+}
+```
+
+### `GET /auth/github/redirect`
+
+Initiate GitHub OAuth login. **Public.**
+
+**Query parameters:**
+| Param | Type | Description |
+|-------|------|-------------|
+| `role` | string | Optional. `candidate` (default) or `employer` |
+
+**Response:** Redirects to GitHub consent screen.
+
+### `GET /auth/github/callback`
+
+GitHub OAuth callback. **Public.**
+
+**Response `200`:**
+```json
+{
+  "success": true,
+  "message": "Login successful via GitHub",
+  "data": {
+    "user": { "id": 1, "name": "John Doe", "email": "john@example.com", "role": "candidate" },
+    "access_token": "1|abc123..."
+  }
+}
+```
+
+**Response `401`:**
+```json
+{
+  "success": false,
+  "message": "GitHub authentication failed"
 }
 ```
 
@@ -139,7 +220,12 @@ New users receive a verification email on registration. The verification link is
 
 Verify email address via signed link (no auth header needed).
 
-**Response `200`:**
+**Response `200` (already verified):**
+```json
+{ "message": "Email already verified" }
+```
+
+**Response `200` (successfully verified):**
 ```json
 { "message": "Email has been verified successfully" }
 ```
@@ -176,6 +262,11 @@ Request a password reset link.
 { "message": "We have emailed your password reset link." }
 ```
 
+**Response `400` (invalid email):**
+```json
+{ "email": "We can't find a user with that email address." }
+```
+
 ### `POST /reset-password`
 
 Reset the password using the token from the email.
@@ -193,6 +284,11 @@ Reset the password using the token from the email.
 **Response `200`:**
 ```json
 { "message": "Your password has been reset." }
+```
+
+**Response `400` (invalid token/email):**
+```json
+{ "email": "This password reset token is invalid." }
 ```
 
 ---
@@ -413,6 +509,8 @@ List the authenticated employer's own jobs. Requires `auth:sanctum`.
 **Response `200`:**
 ```json
 {
+  "success": true,
+  "message": "Jobs retrieved successfully",
   "data": [ "...array of JobResource..." ]
 }
 ```
@@ -435,6 +533,7 @@ Submit an application for a job. Requires `auth:sanctum` + candidate role.
 - Job must be approved.
 - Cannot apply to your own job (as employer).
 - Duplicate applications (same user + job) rejected.
+- Application deadline must not have passed.
 
 **Response `201`:**
 ```json
@@ -452,6 +551,30 @@ Submit an application for a job. Requires `auth:sanctum` + candidate role.
     "rejection_reason": null,
     "user": { "id": 2, "name": "John Doe", "email": "john@test.com", "phone": "...", "linkedin_url": "..." }
   }
+}
+```
+
+**Response `400` (job not approved or deadline passed):**
+```json
+{
+  "success": false,
+  "message": "This job is not open for applications."
+}
+```
+
+**Response `403` (own job):**
+```json
+{
+  "success": false,
+  "message": "You cannot apply to your own job posting."
+}
+```
+
+**Response `409` (duplicate):**
+```json
+{
+  "success": false,
+  "message": "You have already applied to this job."
 }
 ```
 
@@ -488,6 +611,8 @@ Show a single application. Requires auth + owner of application or job.
 
 Update application status. Requires auth + employer (owner of the job).
 
+**Business rules:** Only pending applications can have their status updated.
+
 **Request body:**
 ```json
 {
@@ -511,6 +636,14 @@ Update application status. Requires auth + employer (owner of the job).
 }
 ```
 
+**Response `422` (not pending):**
+```json
+{
+  "success": false,
+  "message": "Only pending applications can be updated."
+}
+```
+
 ### `DELETE /applications/{application}`
 
 Withdraw a pending application. Requires auth + candidate (owner).
@@ -518,6 +651,14 @@ Withdraw a pending application. Requires auth + candidate (owner).
 **Business rules:** Only pending applications can be withdrawn.
 
 **Response `204`:** No content.
+
+**Response `422` (not pending):**
+```json
+{
+  "success": false,
+  "message": "Only pending applications can be withdrawn."
+}
+```
 
 ---
 
@@ -651,17 +792,23 @@ List the authenticated user's notifications. Requires auth.
   "success": true,
   "message": "Notifications retrieved successfully",
   "data": {
-    "notifications": [
-      {
-        "id": 1,
-        "user_id": 1,
-        "type": "job_approved",
-        "message": "Your job posting \"Senior Dev\" has been approved and is now live.",
-        "is_read": false,
-        "created_at": "2026-05-09T12:00:00.000000Z",
-        "updated_at": "2026-05-09T12:00:00.000000Z"
-      }
-    ],
+    "notifications": {
+      "data": [
+        {
+          "id": 1,
+          "user_id": 1,
+          "type": "job_approved",
+          "message": "Your job posting \"Senior Dev\" has been approved and is now live.",
+          "is_read": false,
+          "created_at": "2026-05-09T12:00:00.000000Z",
+          "updated_at": "2026-05-09T12:00:00.000000Z"
+        }
+      ],
+      "current_page": 1,
+      "last_page": 1,
+      "per_page": 20,
+      "total": 1
+    },
     "unread_count": 3
   }
 }
@@ -723,6 +870,14 @@ Show the employer's company profile.
     "created_at": "...",
     "updated_at": "..."
   }
+}
+```
+
+**Response `404` (no company):**
+```json
+{
+  "success": false,
+  "message": "This profile has no companies"
 }
 ```
 
@@ -881,6 +1036,8 @@ List jobs by status (default: pending). Paginated.
 
 Approve a pending job. Sends notification to employer.
 
+**Business rules:** Only pending jobs can be approved.
+
 **Response `200`:**
 ```json
 {
@@ -890,9 +1047,19 @@ Approve a pending job. Sends notification to employer.
 }
 ```
 
+**Response `422` (not pending):**
+```json
+{
+  "success": false,
+  "message": "Only pending jobs can be approved. Current status: approved"
+}
+```
+
 #### `PATCH /admin/jobs/{job}/reject`
 
 Reject a pending job with a reason.
+
+**Business rules:** Only pending jobs can be rejected.
 
 **Request body:**
 ```json
@@ -902,6 +1069,14 @@ Reject a pending job with a reason.
 ```
 
 **Response `200`:** Job data with notification sent.
+
+**Response `422` (not pending):**
+```json
+{
+  "success": false,
+  "message": "Only pending jobs can be rejected. Current status: approved"
+}
+```
 
 #### `POST /admin/jobs/bulk-approve`
 
@@ -1142,6 +1317,10 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: 'https://your-domain.com/api',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  }
 })
 
 // Attach token from localStorage
