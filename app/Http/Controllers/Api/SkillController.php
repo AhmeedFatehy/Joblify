@@ -70,7 +70,7 @@ class SkillController extends BaseApiController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Categoty $skill)
+    public function destroy(Skill $skill)
     {
         try {
             $this->authorize('delete', $skill);

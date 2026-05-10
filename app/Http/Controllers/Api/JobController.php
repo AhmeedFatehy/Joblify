@@ -203,6 +203,6 @@ class JobController extends BaseApiController
             ->latest()
             ->get();
 
-        return JobResource::collection($jobs);
+        return $this->success(JobResource::collection($jobs), 'Jobs retrieved successfully');
     }
 }

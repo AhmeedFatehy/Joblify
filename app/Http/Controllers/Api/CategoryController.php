@@ -70,7 +70,7 @@ class CategoryController extends BaseApiController
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Categoty $category)
+    public function destroy(Category $category)
     {
         try {
             $this->authorize('delete', $category);
