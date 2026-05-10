@@ -41,10 +41,7 @@ class SocialAuthController extends BaseApiController
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return $this->success([
-                'user' => $user,
-                'access_token' => $token,
-            ], 'Login successful via Google');
+            return redirect("http://localhost:8080/auth/callback?token={$token}");
 
         } catch (\Exception $e) {
             return $this->error('Google authentication failed', 401);
@@ -80,10 +77,7 @@ class SocialAuthController extends BaseApiController
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return $this->success([
-                'user' => $user,
-                'access_token' => $token,
-            ], 'Login successful via GitHub');
+            return redirect("http://localhost:8080/auth/callback?token={$token}");
 
         } catch (\Exception $e) {
             return $this->error('GitHub authentication failed', 401);
