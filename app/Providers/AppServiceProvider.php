@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,17 +30,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        VerifyEmail::createUrlUsing(function ($notifiable) {
-        $frontendUrl = 'http://localhost:5173/verify-email'; 
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+        $frontendUrl = "http://localhost:8080/email/verify";
+        
+        $id = $notifiable->getKey();
+        $hash = sha1($notifiable->getEmailForVerification());
+        
+        $verifyUrl = $frontendUrl . '/' . $id . '/' . $hash . '?' . parse_url($url, PHP_URL_QUERY);
 
-        $verifyUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $notifiable->getKey(), 'hash' => sha1($notifiable->getEmailForVerification())]
-        );
-
-        return $frontendUrl . '?queryURL=' . urlencode($verifyUrl);
+        return (new MailMessage)
+            ->subject('Verify Email Address')
+            ->line('Click the button below to verify your email address.')
+            ->action('Verify Email Address', $verifyUrl);
     });
+  
 
         // Admins bypass all policy checks
         Gate::before(function ($user, $ability) {
