@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\Registered;
+use Exception;
+use App\enums\UserRole;
+
 
 class AuthController extends BaseApiController
 {
@@ -20,24 +23,34 @@ class AuthController extends BaseApiController
 
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'phone' => $request->phone,
-            'linkedin_url' => $request->linkedin_url,
-        ]);
+        try{
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+                'phone' => $request->phone,
+                'linkedin_url' => $request->linkedin_url,
+            ]);
 
-        event(new Registered($user));
+            if ($user->role === UserRole::EMPLOYER) {
+                $user->company()->create([
+                    'name' => $request->input('company_name', $user->name . ' Company'),
+                ]);
+            }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+            event(new Registered($user));
 
-        return $this->created([
-            'user' => $user,
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ], 'User registered successfully');
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return $this->created([
+                'user' => $user,
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+            ], 'User registered successfully');
+        } catch (Exception $e) {
+            return $this->error($e->getMessage(), 500);
+        }
     }
 
     public function login(LoginRequest $request): JsonResponse
