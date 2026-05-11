@@ -41,6 +41,11 @@ class JobController extends BaseApiController
                 $query->where('location', 'like', "%{$request->location}%");
             }
 
+            // Filter by company
+            if ($request->filled('company_id')) {
+                $query->where('company_id', $request->company_id);
+            }
+            
             // Filter by category
             if ($request->filled('category_id')) {
                 $query->whereHas('categories', function ($q) use ($request) {
