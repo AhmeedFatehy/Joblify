@@ -43,7 +43,16 @@ class Application extends Model
     protected function resumeUrl(): Attribute
     {
         return Attribute::make(
-            get: fn () => \Storage::disk('r2')->url($this->resume),
+            get: function () {
+                if (! $this->resume) {
+                    return null;
+                }
+
+                return \Storage::disk('r2')->temporaryUrl(
+                    $this->resume,
+                    now()->addHour()
+                );
+            },
         );
     }
 }

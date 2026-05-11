@@ -535,7 +535,9 @@ Submit an application for a job. Requires `auth:sanctum` + candidate role.
 - Duplicate applications (same user + job) rejected.
 - Application deadline must not have passed.
 
-**Response `201`:**
+> **Note:** `resume_url` in application responses is a **temporary signed URL** valid for **1 hour**. Download or display it immediately.
+
+**Response `201`**:
 ```json
 {
   "success": true,
@@ -544,7 +546,7 @@ Submit an application for a job. Requires `auth:sanctum` + candidate role.
     "id": 1,
     "job": { "id": 1, "title": "Senior Dev", "company": { "id": 1, "name": "Acme" } },
     "cover_letter": "...",
-    "resume_url": "https://r2.example.com/...",
+    "resume_url": "https://r2.example.com/...?X-Amz-Algorithm=...&X-Amz-Signature=...&X-Amz-Expires=3600",
     "status": "pending",
     "status_label": "Pending",
     "created_at": "2026-05-09 12:00:00",
